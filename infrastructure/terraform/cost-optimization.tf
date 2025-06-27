@@ -9,11 +9,13 @@ resource "aws_application_autoscaling_target" "sagemaker_gpt" {
   resource_id        = "endpoint/turbofcl-gpt-endpoint/variant/AllTraffic"
   scalable_dimension = "sagemaker:variant:DesiredInstanceCount"
   service_namespace  = "sagemaker"
+  
+  depends_on = [aws_sagemaker_endpoint.gpt]
 }
 
 # S3 Lifecycle Policy
 resource "aws_s3_bucket_lifecycle_configuration" "documents_lifecycle" {
-  bucket = "${var.project_name}-documents-gov"
+  bucket = aws_s3_bucket.documents.id
 
   rule {
     id     = "cost_optimization"
