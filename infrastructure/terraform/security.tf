@@ -189,6 +189,12 @@ resource "aws_wafv2_web_acl" "turbofcl_enhanced" {
     allow {}
   }
 
+  visibility_config {
+    cloudwatch_metrics_enabled = true
+    metric_name                = "${var.project_name}-enhanced-waf"
+    sampled_requests_enabled   = true
+  }
+
   # Rate limiting per IP
   rule {
     name     = "RateLimitRule"

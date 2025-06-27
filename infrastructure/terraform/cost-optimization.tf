@@ -1,4 +1,22 @@
-# Cost Optimization Resources
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 4.0"
+    }
+  }
+}
+
+provider "aws" {
+  region = var.aws_region
+}
+
+# Ensure the referenced SageMaker endpoint resource exists
+resource "aws_s3_bucket" "documents" {
+  bucket = "${var.project_name}-documents"
+}
+
+# Removed duplicate aws_s3_bucket_lifecycle_configuration "documents_lifecycle" resource to prevent conflicts.
 
 # SageMaker Auto Scaling
 resource "aws_application_autoscaling_target" "sagemaker_gpt" {
@@ -44,13 +62,6 @@ resource "aws_budgets_budget" "monthly_budget" {
   limit_amount = var.environment == "production" ? "1500" : "300"
   limit_unit   = "USD"
   time_unit    = "MONTHLY"
-
-  cost_filters {
-    tag {
-      key    = "Project"
-      values = ["TurboFCL"]
-    }
-  }
 
   notification {
     comparison_operator        = "GREATER_THAN"
