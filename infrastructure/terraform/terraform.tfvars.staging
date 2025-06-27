@@ -1,0 +1,29 @@
+# TurboFCL Staging Environment Configuration
+project_name = "turbofcl"
+environment  = "staging"
+aws_region   = "us-gov-west-1"
+
+# Smaller resources for staging
+vpc_cidr = "10.1.0.0/16"
+private_subnets = ["10.1.1.0/24", "10.1.2.0/24"]
+public_subnets = ["10.1.101.0/24", "10.1.102.0/24"]
+database_subnets = ["10.1.201.0/24", "10.1.202.0/24"]
+
+# Cost-optimized instances
+rds_instance_class = "db.t3.micro"
+rds_allocated_storage = 20
+rds_max_allocated_storage = 100
+rds_backup_retention_period = 7
+
+# Minimal Redis
+enable_redis = false
+
+# Placeholder certificate (replace with actual)
+certificate_arn = "arn:aws-us-gov:acm:us-gov-west-1:123456789012:certificate/staging-cert"
+alert_email = "staging-alerts@example.gov"
+
+tags = {
+  Project = "TurboFCL"
+  Environment = "Staging"
+  DataClassification = "Test"
+}

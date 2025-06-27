@@ -40,10 +40,10 @@ redis_num_nodes  = 2  # Multi-AZ for high availability
 
 # SSL Certificate ARN (must be created in ACM separately)
 # Replace with actual certificate ARN after creation
-certificate_arn = "arn:aws-us-gov:acm:us-gov-west-1:ACCOUNT_ID:certificate/CERTIFICATE_ID"
+certificate_arn = "arn:aws-us-gov:acm:us-gov-west-1:123456789012:certificate/12345678-1234-1234-1234-123456789012"
 
 # Alert Email
-alert_email = "turbofcl-alerts@yourdomain.gov"
+alert_email = "admin@example.gov"
 
 # Tags
 tags = {
