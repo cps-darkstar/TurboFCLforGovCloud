@@ -6,7 +6,7 @@
 
 export const ENTITY_TYPES = {
   SOLE_PROPRIETORSHIP: 'sole-proprietorship',
-  GENERAL_PARTNERSHIP: 'general-partnership',
+  GENERAL_PARTNERSHIP: 'general-partnership', 
   LIMITED_PARTNERSHIP: 'limited-partnership',
   CORPORATION: 'corporation',
   PUBLIC_CORPORATION: 'public-corporation',

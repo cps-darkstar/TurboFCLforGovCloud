@@ -8,7 +8,8 @@ from datetime import datetime, timedelta
 import re
 from enum import Enum
 
-from app.schemas.turbofcl import (
+# Import from root-level schemas since app.schemas doesn't exist
+from turbofcl import (
     EntityType, FOCIStatus, ValidationIssue, AIInsight,
     FCLApplicationCreate, SAMData, EDGARData
 )

@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 from typing import List, Optional, Dict, Any
 from datetime import datetime
 from enum import Enum
@@ -28,7 +28,7 @@ class FOCIStatus(str, Enum):
 
 class FCLApplicationCreate(BaseModel):
     company_name: str = Field(..., min_length=1, max_length=500)
-    uei: Optional[str] = Field(None, regex="^[A-Z0-9]{12}$")
+    uei: Optional[str] = Field(None, pattern="^[A-Z0-9]{12}$")
     cage_code: Optional[str] = Field(None, max_length=10)
     entity_type: Optional[EntityType] = None
     foci_status: List[FOCIStatus] = Field(default_factory=list)
@@ -44,13 +44,13 @@ class ChatResponse(BaseModel):
     sources: List[str] = Field(default_factory=list)
 
 class ValidationIssue(BaseModel):
-    type: str = Field(..., regex="^(error|warning)$")
+    type: str = Field(..., pattern="^(error|warning)$")
     field: str
     message: str
     source: str
 
 class AIInsight(BaseModel):
-    type: str = Field(..., regex="^(recommendation|warning|info)$")
+    type: str = Field(..., pattern="^(recommendation|warning|info)$")
     message: str
     confidence: float = Field(..., ge=0.0, le=1.0)
 

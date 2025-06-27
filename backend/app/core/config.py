@@ -3,7 +3,8 @@ TurboFCL Backend Configuration
 AWS GovCloud Compliant Settings
 """
 
-from pydantic import BaseSettings, validator
+from pydantic_settings import BaseSettings
+from pydantic import field_validator
 from typing import Optional, List
 import os
 from functools import lru_cache
@@ -84,13 +85,15 @@ class Settings(BaseSettings):
     REDIS_URL: Optional[str] = None
     CACHE_TTL_SECONDS: int = 86400  # 24 hours for SAM.gov data
     
-    @validator("ENVIRONMENT")
+    @field_validator("ENVIRONMENT")
+    @classmethod
     def validate_environment(cls, v):
         if v not in ["development", "staging", "production"]:
             raise ValueError("Invalid environment")
         return v
     
-    @validator("DATABASE_URL")
+    @field_validator("DATABASE_URL")
+    @classmethod
     def validate_database_url(cls, v):
         if not v.startswith("postgresql://"):
             raise ValueError("Database URL must be PostgreSQL")
