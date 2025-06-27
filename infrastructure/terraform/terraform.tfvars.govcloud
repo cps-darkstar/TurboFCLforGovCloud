@@ -1,0 +1,57 @@
+# TurboFCL AWS GovCloud Deployment Variables
+# This file contains production-ready values for AWS GovCloud West (us-gov-west-1)
+
+# General Configuration
+project_name = "turbofcl"
+environment  = "production"
+aws_region   = "us-gov-west-1"
+
+# VPC Configuration
+vpc_cidr = "10.0.0.0/16"
+
+# Subnet Configuration (2 AZs for GovCloud West)
+private_subnets = [
+  "10.0.1.0/24",
+  "10.0.2.0/24"
+]
+
+public_subnets = [
+  "10.0.101.0/24",
+  "10.0.102.0/24"
+]
+
+database_subnets = [
+  "10.0.201.0/24",
+  "10.0.202.0/24"
+]
+
+# RDS Configuration (Production-ready for FCL workload)
+rds_instance_class          = "db.r6g.large"      # 2 vCPUs, 16 GB RAM
+rds_allocated_storage       = 100                 # GB
+rds_max_allocated_storage   = 500                 # GB - autoscaling enabled
+rds_backup_retention_period = 30                  # days
+rds_backup_window          = "03:00-04:00"       # UTC
+rds_maintenance_window     = "sun:04:00-sun:05:00" # UTC
+
+# ElastiCache Redis Configuration
+enable_redis     = true
+redis_node_type  = "cache.r6g.large"
+redis_num_nodes  = 2  # Multi-AZ for high availability
+
+# SSL Certificate ARN (must be created in ACM separately)
+# Replace with actual certificate ARN after creation
+certificate_arn = "arn:aws-us-gov:acm:us-gov-west-1:ACCOUNT_ID:certificate/CERTIFICATE_ID"
+
+# Alert Email
+alert_email = "turbofcl-alerts@yourdomain.gov"
+
+# Tags
+tags = {
+  Project         = "TurboFCL"
+  Environment     = "Production"
+  DataClassification = "CUI"  # Controlled Unclassified Information
+  ComplianceLevel = "FedRAMP-High"
+  CostCenter      = "DCSA-FCL"
+  Owner           = "FCL-Team"
+  BackupSchedule  = "Daily"
+} 
