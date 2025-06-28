@@ -4,12 +4,15 @@ import WelcomeStep from '../components/application/steps/WelcomeStep';
 import { CompanyBasicsStep } from '../components/Steps/CompanyBasicsStep';
 import { EntityTypeStep } from '../components/Steps/EntityTypeStep';
 import { useApplication } from '../contexts/ApplicationContext';
-import { useAuth } from '../contexts/AuthContext';
 
 const ApplicationPage: React.FC = () => {
   const { id } = useParams<{ id?: string }>();
-  const { user } = useAuth();
-  const { applicationData, updateApplicationData, currentStep, setCurrentStep } = useApplication();
+  const { currentStep } = useApplication();
+
+  // TODO: Use the 'id' from useParams to fetch existing application data if it exists.
+  if (id) {
+    console.log("Application ID:", id);
+  }
 
   const renderCurrentStep = () => {
     switch (currentStep) {
@@ -26,7 +29,7 @@ const ApplicationPage: React.FC = () => {
   };
 
   return (
-    <div className="flex h-screen bg-primary-bg">
+    <div className="flex h-screen bg-background-primary">
       <main className="flex-1 p-8 overflow-y-auto">
         {renderCurrentStep()}
       </main>

@@ -177,6 +177,9 @@ if (-not $PreDeployment) {
                     if ($response.StatusCode -eq 200) {
                         Write-Success "✓ API health check passed"
                         $validationResults += @{Check="API Health"; Status="PASS"; Details="HTTP 200 OK"}
+                    } else {
+                         Write-Warning "⚠ API health check failed (may still be starting)"
+                         $validationResults += @{Check="API Health"; Status="WARN"; Details="Health check failed"}
                     }
                 } catch {
                     Write-Warning "⚠ API health check failed (may still be starting)"

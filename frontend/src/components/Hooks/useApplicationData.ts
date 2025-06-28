@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { AIInsight, FCLApplication, SAMData, ValidationIssue } from '../types'; // We will create this types file next
+import { FCLApplication, SAMData } from '../../types/turbofcl'; // We will create this types file next
 
 // This hook centralizes all application form state and related business logic.
 export const useApplicationData = () => {
@@ -11,10 +11,10 @@ export const useApplicationData = () => {
   });
 
   const [processingStatus, setProcessingStatus] = useState<'idle' | 'fetching' | 'validating' | 'complete' | 'error'>('idle');
-  const [validation, setValidation] = useState<{ issues: ValidationIssue[], insights: AIInsight[] }>({ issues: [], insights: [] });
+  const [validation] = useState<{ issues: any[], insights: any[] }>({ issues: [], insights: [] });
 
   // Simulates fetching data from our backend, which in turn calls SAM.gov
-  const fetchSamData = async (uei: string): Promise<SAMData> => {
+  const fetchSamData = useCallback(async (uei: string): Promise<SAMData> => {
     console.log(`Fetching SAM.gov data for UEI: ${uei}`);
     setProcessingStatus('fetching');
     
@@ -29,11 +29,14 @@ export const useApplicationData = () => {
       cageCode: "8C7V9",
       entityStructure: "LIMITED LIABILITY COMPANY",
       stateOfIncorporation: "DE",
+      principalPlaceOfBusiness: "123 Quantum Lane, Wilmington, DE 19801",
+      registrationStatus: "Active",
+      lastUpdated: new Date().toISOString(),
     };
     
     setProcessingStatus('complete');
     return mockSamData;
-  };
+  }, []);
 
   // A memoized function to update the application state.
   // Using useCallback ensures this function has a stable identity across re-renders.
@@ -52,7 +55,7 @@ export const useApplicationData = () => {
         // In a future step, we would trigger AI-powered validation here.
       });
     }
-  }, []);
+  }, [fetchSamData]);
 
   return {
     applicationData,

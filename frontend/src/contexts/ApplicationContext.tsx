@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { ApplicationData, ValidationIssue, AIInsight } from '../types/turbofcl';
-import { ENTITY_TYPES, FOCI_CONDITIONS } from '../constants/businessRules';
+import React, { createContext, ReactNode, useContext, useState } from 'react';
+import { FOCI_CONDITIONS } from '../constants/businessRules';
+import { ApplicationData } from '../types/turbofcl';
 
 interface ApplicationContextType {
   applicationData: ApplicationData;

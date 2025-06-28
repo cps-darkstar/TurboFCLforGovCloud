@@ -31,24 +31,24 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-primary-bg flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-background-primary flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center">
-          <Shield className="h-12 w-12 text-accent-text" />
+          <Shield className="h-12 w-12 text-primary-accent" />
         </div>
-        <h2 className="mt-6 text-center text-3xl font-bold text-primary-text">
+        <h2 className="mt-6 text-center h1-typography">
           TurboFCL
         </h2>
-        <p className="mt-2 text-center text-sm text-secondary-text">
+        <p className="mt-2 text-center p-typography">
           AI-Powered Facility Clearance Assistant
         </p>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="card-common py-8 px-4 sm:px-10">
+        <div className="card py-8 px-4 sm:px-10">
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-secondary-text">
+              <label htmlFor="email" className="form-label">
                 Email address
               </label>
               <div className="mt-1">
@@ -60,13 +60,13 @@ const LoginPage: React.FC = () => {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="form-input appearance-none block w-full px-3 py-2 border rounded-md placeholder-gray-400"
+                  className="form-input"
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-secondary-text">
+              <label htmlFor="password" className="form-label">
                 Password
               </label>
               <div className="mt-1 relative">
@@ -78,7 +78,7 @@ const LoginPage: React.FC = () => {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="form-input appearance-none block w-full px-3 py-2 border rounded-md placeholder-gray-400 pr-10"
+                  className="form-input pr-10"
                 />
                 <button
                   type="button"
@@ -86,9 +86,9 @@ const LoginPage: React.FC = () => {
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? (
-                    <EyeOff className="h-4 w-4 text-gray-400" />
+                    <EyeOff className="h-4 w-4 text-text-tertiary" />
                   ) : (
-                    <Eye className="h-4 w-4 text-gray-400" />
+                    <Eye className="h-4 w-4 text-text-tertiary" />
                   )}
                 </button>
               </div>
@@ -98,7 +98,7 @@ const LoginPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-button-primary-bg hover:bg-button-primary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent-border btn-3d disabled:opacity-50"
+                className="button-primary w-full"
               >
                 {isLoading ? 'Signing in...' : 'Sign in'}
               </button>

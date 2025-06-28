@@ -11,6 +11,7 @@ import {
     FileCheck,
     FileText,
     HelpCircle,
+    Loader,
     Upload,
     X
 } from 'lucide-react';
@@ -68,42 +69,7 @@ export const DocumentUploadStep: React.FC<DocumentUploadStepProps> = ({
     sec: ['Most recent SEC filings']
   };
 
-  const getCategoryForDocument = (docName: string): string => {
-    for (const [category, docs] of Object.entries(documentCategories)) {
-      if (docs.some(d => docName.includes(d))) {
-        return category;
-      }
-    }
-    return 'other';
-  };
-
-  const handleDragEnter = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(true);
-  }, []);
-
-  const handleDragLeave = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-  }, []);
-
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-  }, []);
-
-  const handleDrop = useCallback(async (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-
-    const files = Array.from(e.dataTransfer.files);
-    await handleFiles(files);
-  }, []);
-
-  const handleFiles = async (files: File[]) => {
+  const handleFiles = useCallback(async (files: File[]) => {
     for (const file of files) {
       const validation = validateDocument(file);
       
@@ -137,7 +103,33 @@ export const DocumentUploadStep: React.FC<DocumentUploadStepProps> = ({
         });
       }
     }
-  };
+  }, [onDocumentUpload]);
+
+  const handleDragEnter = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
+
+  const handleDrop = useCallback(async (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const files = Array.from(e.dataTransfer.files);
+    await handleFiles(files);
+  }, [handleFiles]);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -436,4 +428,4 @@ export const DocumentUploadStep: React.FC<DocumentUploadStepProps> = ({
   );
 };
 
-export default DocumentUploadStep; 
+export default DocumentUploadStep;

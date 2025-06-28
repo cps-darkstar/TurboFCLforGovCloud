@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { ApplicationData, ChatMessage, SAMData, ValidationIssue, AIInsight } from '../types/turbofcl';
+import { ApplicationData, SAMData, ValidationIssue, AIInsight } from '../types/turbofcl';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 
@@ -36,12 +36,12 @@ const apiClient = axios.create({
   },
 });
 
-let authToken: string | null = null;
+// let authToken: string | null = null;
 
 export const turboFCLService = {
   // Set auth token
   setAuthToken(token: string | null) {
-    authToken = token;
+    // authToken = token;
     if (token) {
       apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     } else {
@@ -50,7 +50,7 @@ export const turboFCLService = {
   },
 
   // Authentication
-  async authenticate(email: string, password: string): Promise<{
+  async authenticate(email: string, _password: string): Promise<{
     accessToken: string;
     user: any;
   }> {
@@ -77,7 +77,7 @@ export const turboFCLService = {
     return token.startsWith('mock-jwt-token-');
   },
 
-  async refreshToken(refreshToken: string): Promise<{ accessToken: string }> {
+  async refreshToken(_refreshToken: string): Promise<{ accessToken: string }> {
     // Mock token refresh
     return { accessToken: 'mock-jwt-token-' + Date.now() };
   },

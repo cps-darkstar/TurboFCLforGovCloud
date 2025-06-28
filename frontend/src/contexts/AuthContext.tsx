@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, ReactNode, useCallback, useContext, useEffect, useState } from 'react';
 import { turboFCLService } from '../services/turboFCLService';
 
 interface User {
@@ -106,7 +106,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const logout = () => {
+  const logout = useCallback(() => {
     setUser(null);
     setToken(null);
     
@@ -117,16 +117,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     
     // Clear service auth token
     turboFCLService.setAuthToken(null);
-  };
+  }, []);
 
-  const refreshToken = async () => {
+  const refreshToken = useCallback(async () => {
     try {
-      const refreshToken = localStorage.getItem('turbofcl_refresh_token');
-      if (!refreshToken) {
+      const refreshTokenValue = localStorage.getItem('turbofcl_refresh_token');
+      if (!refreshTokenValue) {
         throw new Error('No refresh token available');
       }
 
-      const authResult = await turboFCLService.refreshToken(refreshToken);
+      const authResult = await turboFCLService.refreshToken(refreshTokenValue);
       
       setToken(authResult.accessToken);
       localStorage.setItem('turbofcl_token', authResult.accessToken);
@@ -139,7 +139,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       logout(); // Force logout if refresh fails
       throw error;
     }
-  };
+  }, [logout]);
 
   // Set up token refresh interval
   useEffect(() => {
@@ -155,7 +155,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       return () => clearInterval(refreshInterval);
     }
-  }, [token]);
+  }, [token, refreshToken]);
 
   const value: AuthContextType = {
     user,
