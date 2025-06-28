@@ -44,15 +44,15 @@ if ($PreDeployment) {
     
     # Check required files
     $requiredFiles = @(
-        "infrastructure\terraform\main.tf",
-        "infrastructure\terraform\variables.tf",
-        "infrastructure\terraform\terraform.tfvars.govcloud",
-        "backend\Dockerfile",
-        "frontend\Dockerfile"
+        "infrastructure/terraform/main.tf",
+        "infrastructure/terraform/variables.tf",
+        "infrastructure/terraform/terraform.tfvars.govcloud",
+        "backend/Dockerfile",
+        "frontend/Dockerfile"
     )
     
     foreach ($file in $requiredFiles) {
-        if (Test-Path $file) {
+        if (Test-Path "..\$file") {
             Write-Success "✓ Required file exists: $file"
             $validationResults += @{Check = "File: $file"; Status = "PASS"; Details = "File exists" }
         }
@@ -64,7 +64,7 @@ if ($PreDeployment) {
     
     # Validate Terraform configuration
     Write-Info "`nValidating Terraform configuration..."
-    Push-Location infrastructure\terraform
+    Push-Location "..\infrastructure\terraform"
     try {
         terraform init -backend=false
         terraform validate
