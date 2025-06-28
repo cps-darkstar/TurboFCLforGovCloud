@@ -2,13 +2,13 @@
 # Validates GovCloud deployment readiness and post-deployment health
 
 param(
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [string]$Environment = "production",
     
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [string]$Region = "us-gov-west-1",
     
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [switch]$PreDeployment
 )
 
@@ -35,10 +35,11 @@ if ($PreDeployment) {
     try {
         $identity = aws sts get-caller-identity --region $Region | ConvertFrom-Json
         Write-Success "✓ AWS credentials valid: $($identity.Arn)"
-        $validationResults += @{Check="AWS Credentials"; Status="PASS"; Details=$identity.Arn}
-    } catch {
+        $validationResults += @{Check = "AWS Credentials"; Status = "PASS"; Details = $identity.Arn }
+    }
+    catch {
         Write-Error "✗ AWS credentials invalid"
-        $validationResults += @{Check="AWS Credentials"; Status="FAIL"; Details=$_.Exception.Message}
+        $validationResults += @{Check = "AWS Credentials"; Status = "FAIL"; Details = $_.Exception.Message }
     }
     
     # Check required files
@@ -53,10 +54,11 @@ if ($PreDeployment) {
     foreach ($file in $requiredFiles) {
         if (Test-Path $file) {
             Write-Success "✓ Required file exists: $file"
-            $validationResults += @{Check="File: $file"; Status="PASS"; Details="File exists"}
-        } else {
+            $validationResults += @{Check = "File: $file"; Status = "PASS"; Details = "File exists" }
+        }
+        else {
             Write-Error "✗ Missing required file: $file"
-            $validationResults += @{Check="File: $file"; Status="FAIL"; Details="File missing"}
+            $validationResults += @{Check = "File: $file"; Status = "FAIL"; Details = "File missing" }
         }
     }
     
@@ -67,10 +69,11 @@ if ($PreDeployment) {
         terraform init -backend=false
         terraform validate
         Write-Success "✓ Terraform configuration valid"
-        $validationResults += @{Check="Terraform Validation"; Status="PASS"; Details="Configuration valid"}
-    } catch {
+        $validationResults += @{Check = "Terraform Validation"; Status = "PASS"; Details = "Configuration valid" }
+    }
+    catch {
         Write-Error "✗ Terraform configuration invalid: $_"
-        $validationResults += @{Check="Terraform Validation"; Status="FAIL"; Details=$_.Exception.Message}
+        $validationResults += @{Check = "Terraform Validation"; Status = "FAIL"; Details = $_.Exception.Message }
     }
     Pop-Location
     
@@ -78,10 +81,11 @@ if ($PreDeployment) {
     try {
         docker --version | Out-Null
         Write-Success "✓ Docker available"
-        $validationResults += @{Check="Docker"; Status="PASS"; Details="Docker available"}
-    } catch {
+        $validationResults += @{Check = "Docker"; Status = "PASS"; Details = "Docker available" }
+    }
+    catch {
         Write-Error "✗ Docker not available"
-        $validationResults += @{Check="Docker"; Status="FAIL"; Details="Docker not found"}
+        $validationResults += @{Check = "Docker"; Status = "FAIL"; Details = "Docker not found" }
     }
 }
 
@@ -94,7 +98,7 @@ if (-not $PreDeployment) {
         $services = aws ecs list-services --cluster turbofcl-cluster --region $Region | ConvertFrom-Json
         if ($services.serviceArns.Count -gt 0) {
             Write-Success "✓ ECS services deployed: $($services.serviceArns.Count) services"
-            $validationResults += @{Check="ECS Services"; Status="PASS"; Details="$($services.serviceArns.Count) services found"}
+            $validationResults += @{Check = "ECS Services"; Status = "PASS"; Details = "$($services.serviceArns.Count) services found" }
             
             # Check service health
             foreach ($serviceArn in $services.serviceArns) {
@@ -105,19 +109,22 @@ if (-not $PreDeployment) {
                 
                 if ($runningCount -eq $desiredCount -and $runningCount -gt 0) {
                     Write-Success "✓ Service healthy: $serviceName ($runningCount/$desiredCount)"
-                    $validationResults += @{Check="Service: $serviceName"; Status="PASS"; Details="$runningCount/$desiredCount tasks running"}
-                } else {
+                    $validationResults += @{Check = "Service: $serviceName"; Status = "PASS"; Details = "$runningCount/$desiredCount tasks running" }
+                }
+                else {
                     Write-Warning "⚠ Service not fully healthy: $serviceName ($runningCount/$desiredCount)"
-                    $validationResults += @{Check="Service: $serviceName"; Status="WARN"; Details="$runningCount/$desiredCount tasks running"}
+                    $validationResults += @{Check = "Service: $serviceName"; Status = "WARN"; Details = "$runningCount/$desiredCount tasks running" }
                 }
             }
-        } else {
-            Write-Error "✗ No ECS services found"
-            $validationResults += @{Check="ECS Services"; Status="FAIL"; Details="No services found"}
         }
-    } catch {
+        else {
+            Write-Error "✗ No ECS services found"
+            $validationResults += @{Check = "ECS Services"; Status = "FAIL"; Details = "No services found" }
+        }
+    }
+    catch {
         Write-Error "✗ Failed to check ECS services: $_"
-        $validationResults += @{Check="ECS Services"; Status="FAIL"; Details=$_.Exception.Message}
+        $validationResults += @{Check = "ECS Services"; Status = "FAIL"; Details = $_.Exception.Message }
     }
     
     # Check RDS instance
@@ -128,18 +135,21 @@ if (-not $PreDeployment) {
         if ($turbofclDb) {
             if ($turbofclDb.DBInstanceStatus -eq "available") {
                 Write-Success "✓ RDS instance healthy: $($turbofclDb.DBInstanceIdentifier)"
-                $validationResults += @{Check="RDS Instance"; Status="PASS"; Details="Status: $($turbofclDb.DBInstanceStatus)"}
-            } else {
-                Write-Warning "⚠ RDS instance not available: $($turbofclDb.DBInstanceStatus)"
-                $validationResults += @{Check="RDS Instance"; Status="WARN"; Details="Status: $($turbofclDb.DBInstanceStatus)"}
+                $validationResults += @{Check = "RDS Instance"; Status = "PASS"; Details = "Status: $($turbofclDb.DBInstanceStatus)" }
             }
-        } else {
-            Write-Error "✗ No TurboFCL RDS instance found"
-            $validationResults += @{Check="RDS Instance"; Status="FAIL"; Details="No instance found"}
+            else {
+                Write-Warning "⚠ RDS instance not available: $($turbofclDb.DBInstanceStatus)"
+                $validationResults += @{Check = "RDS Instance"; Status = "WARN"; Details = "Status: $($turbofclDb.DBInstanceStatus)" }
+            }
         }
-    } catch {
+        else {
+            Write-Error "✗ No TurboFCL RDS instance found"
+            $validationResults += @{Check = "RDS Instance"; Status = "FAIL"; Details = "No instance found" }
+        }
+    }
+    catch {
         Write-Error "✗ Failed to check RDS: $_"
-        $validationResults += @{Check="RDS Instance"; Status="FAIL"; Details=$_.Exception.Message}
+        $validationResults += @{Check = "RDS Instance"; Status = "FAIL"; Details = $_.Exception.Message }
     }
     
     # Check SageMaker endpoints
@@ -149,14 +159,16 @@ if (-not $PreDeployment) {
             $endpointInfo = aws sagemaker describe-endpoint --endpoint-name $endpoint --region $Region | ConvertFrom-Json
             if ($endpointInfo.EndpointStatus -eq "InService") {
                 Write-Success "✓ SageMaker endpoint healthy: $endpoint"
-                $validationResults += @{Check="SageMaker: $endpoint"; Status="PASS"; Details="Status: InService"}
-            } else {
-                Write-Warning "⚠ SageMaker endpoint not ready: $endpoint ($($endpointInfo.EndpointStatus))"
-                $validationResults += @{Check="SageMaker: $endpoint"; Status="WARN"; Details="Status: $($endpointInfo.EndpointStatus)"}
+                $validationResults += @{Check = "SageMaker: $endpoint"; Status = "PASS"; Details = "Status: InService" }
             }
-        } catch {
+            else {
+                Write-Warning "⚠ SageMaker endpoint not ready: $endpoint ($($endpointInfo.EndpointStatus))"
+                $validationResults += @{Check = "SageMaker: $endpoint"; Status = "WARN"; Details = "Status: $($endpointInfo.EndpointStatus)" }
+            }
+        }
+        catch {
             Write-Error "✗ SageMaker endpoint not found: $endpoint"
-            $validationResults += @{Check="SageMaker: $endpoint"; Status="FAIL"; Details="Endpoint not found"}
+            $validationResults += @{Check = "SageMaker: $endpoint"; Status = "FAIL"; Details = "Endpoint not found" }
         }
     }
     
@@ -168,7 +180,7 @@ if (-not $PreDeployment) {
         if ($turbofclAlb) {
             if ($turbofclAlb.State.Code -eq "active") {
                 Write-Success "✓ ALB healthy: $($turbofclAlb.LoadBalancerName)"
-                $validationResults += @{Check="ALB"; Status="PASS"; Details="Status: active"}
+                $validationResults += @{Check = "ALB"; Status = "PASS"; Details = "Status: active" }
                 
                 # Test health endpoint
                 $albDns = $turbofclAlb.DNSName
@@ -176,26 +188,31 @@ if (-not $PreDeployment) {
                     $response = Invoke-WebRequest -Uri "https://$albDns/api/health" -Method GET -TimeoutSec 10
                     if ($response.StatusCode -eq 200) {
                         Write-Success "✓ API health check passed"
-                        $validationResults += @{Check="API Health"; Status="PASS"; Details="HTTP 200 OK"}
-                    } else {
-                         Write-Warning "⚠ API health check failed (may still be starting)"
-                         $validationResults += @{Check="API Health"; Status="WARN"; Details="Health check failed"}
+                        $validationResults += @{Check = "API Health"; Status = "PASS"; Details = "HTTP 200 OK" }
                     }
-                } catch {
-                    Write-Warning "⚠ API health check failed (may still be starting)"
-                    $validationResults += @{Check="API Health"; Status="WARN"; Details="Health check failed"}
+                    else {
+                        Write-Warning "⚠ API health check failed (may still be starting)"
+                        $validationResults += @{Check = "API Health"; Status = "WARN"; Details = "Health check failed" }
+                    }
                 }
-            } else {
-                Write-Warning "⚠ ALB not active: $($turbofclAlb.State.Code)"
-                $validationResults += @{Check="ALB"; Status="WARN"; Details="Status: $($turbofclAlb.State.Code)"}
+                catch {
+                    Write-Warning "⚠ API health check failed (may still be starting)"
+                    $validationResults += @{Check = "API Health"; Status = "WARN"; Details = "Health check failed" }
+                }
             }
-        } else {
-            Write-Error "✗ No TurboFCL ALB found"
-            $validationResults += @{Check="ALB"; Status="FAIL"; Details="No ALB found"}
+            else {
+                Write-Warning "⚠ ALB not active: $($turbofclAlb.State.Code)"
+                $validationResults += @{Check = "ALB"; Status = "WARN"; Details = "Status: $($turbofclAlb.State.Code)" }
+            }
         }
-    } catch {
+        else {
+            Write-Error "✗ No TurboFCL ALB found"
+            $validationResults += @{Check = "ALB"; Status = "FAIL"; Details = "No ALB found" }
+        }
+    }
+    catch {
         Write-Error "✗ Failed to check ALB: $_"
-        $validationResults += @{Check="ALB"; Status="FAIL"; Details=$_.Exception.Message}
+        $validationResults += @{Check = "ALB"; Status = "FAIL"; Details = $_.Exception.Message }
     }
     
     # Check S3 buckets
@@ -207,14 +224,16 @@ if (-not $PreDeployment) {
             
             if ($turbofclBucket) {
                 Write-Success "✓ S3 bucket exists: $bucketType"
-                $validationResults += @{Check="S3: $bucketType"; Status="PASS"; Details="Bucket exists"}
-            } else {
-                Write-Error "✗ S3 bucket missing: $bucketType"
-                $validationResults += @{Check="S3: $bucketType"; Status="FAIL"; Details="Bucket not found"}
+                $validationResults += @{Check = "S3: $bucketType"; Status = "PASS"; Details = "Bucket exists" }
             }
-        } catch {
+            else {
+                Write-Error "✗ S3 bucket missing: $bucketType"
+                $validationResults += @{Check = "S3: $bucketType"; Status = "FAIL"; Details = "Bucket not found" }
+            }
+        }
+        catch {
             Write-Error "✗ Failed to check S3 bucket: $bucketType"
-            $validationResults += @{Check="S3: $bucketType"; Status="FAIL"; Details=$_.Exception.Message}
+            $validationResults += @{Check = "S3: $bucketType"; Status = "FAIL"; Details = $_.Exception.Message }
         }
     }
 }
@@ -232,14 +251,16 @@ try {
     
     if ($turbofclKey) {
         Write-Success "✓ KMS key configured"
-        $validationResults += @{Check="KMS Key"; Status="PASS"; Details="Key exists and enabled"}
-    } else {
-        Write-Error "✗ No TurboFCL KMS key found"
-        $validationResults += @{Check="KMS Key"; Status="FAIL"; Details="No key found"}
+        $validationResults += @{Check = "KMS Key"; Status = "PASS"; Details = "Key exists and enabled" }
     }
-} catch {
+    else {
+        Write-Error "✗ No TurboFCL KMS key found"
+        $validationResults += @{Check = "KMS Key"; Status = "FAIL"; Details = "No key found" }
+    }
+}
+catch {
     Write-Error "✗ Failed to check KMS: $_"
-    $validationResults += @{Check="KMS Key"; Status="FAIL"; Details=$_.Exception.Message}
+    $validationResults += @{Check = "KMS Key"; Status = "FAIL"; Details = $_.Exception.Message }
 }
 
 # Check Cognito User Pool
@@ -250,14 +271,16 @@ if (-not $PreDeployment) {
         
         if ($turbofclPool) {
             Write-Success "✓ Cognito User Pool configured"
-            $validationResults += @{Check="Cognito User Pool"; Status="PASS"; Details="Pool exists"}
-        } else {
-            Write-Error "✗ No TurboFCL Cognito User Pool found"
-            $validationResults += @{Check="Cognito User Pool"; Status="FAIL"; Details="No pool found"}
+            $validationResults += @{Check = "Cognito User Pool"; Status = "PASS"; Details = "Pool exists" }
         }
-    } catch {
+        else {
+            Write-Error "✗ No TurboFCL Cognito User Pool found"
+            $validationResults += @{Check = "Cognito User Pool"; Status = "FAIL"; Details = "No pool found" }
+        }
+    }
+    catch {
         Write-Error "✗ Failed to check Cognito: $_"
-        $validationResults += @{Check="Cognito User Pool"; Status="FAIL"; Details=$_.Exception.Message}
+        $validationResults += @{Check = "Cognito User Pool"; Status = "FAIL"; Details = $_.Exception.Message }
     }
 }
 
@@ -281,23 +304,24 @@ if ($failCount -eq 0) {
     if ($warnCount -gt 0) {
         Write-Warning "⚠️  Some warnings detected - review before production use"
     }
-} else {
+}
+else {
     Write-Error "`n❌ Critical issues detected - resolve before proceeding"
 }
 
 # Save detailed report
 $report = @{
-    Timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-    Environment = $Environment
-    Region = $Region
+    Timestamp      = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    Environment    = $Environment
+    Region         = $Region
     ValidationMode = if ($PreDeployment) { "Pre-deployment" } else { "Post-deployment" }
-    Summary = @{
-        Total = $totalCount
-        Passed = $passCount
+    Summary        = @{
+        Total    = $totalCount
+        Passed   = $passCount
         Warnings = $warnCount
-        Failed = $failCount
+        Failed   = $failCount
     }
-    Results = $validationResults
+    Results        = $validationResults
 }
 
 $reportFile = "validation-report-$(Get-Date -Format 'yyyyMMdd-HHmmss').json"
@@ -307,6 +331,7 @@ Write-Info "`nDetailed report saved to: $reportFile"
 # Exit with appropriate code
 if ($failCount -gt 0) {
     exit 1
-} else {
+}
+else {
     exit 0
 }

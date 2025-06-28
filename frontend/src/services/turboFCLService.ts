@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { ApplicationData, SAMData, ValidationIssue, AIInsight } from '../types/turbofcl';
+import { AIInsight, ApplicationData, SAMData, ValidationIssue } from '../types/turbofcl';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 
