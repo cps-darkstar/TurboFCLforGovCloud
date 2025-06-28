@@ -1,6 +1,6 @@
+import { CheckCircle, Loader2 } from 'lucide-react';
 import React from 'react';
 import { useApplicationData } from '../../hooks/useApplicationData';
-import { Loader2, CheckCircle } from 'lucide-react';
 
 export const CompanyBasicsStep = () => {
   const { applicationData, updateApplicationData, processingStatus } = useApplicationData();
@@ -13,15 +13,15 @@ export const CompanyBasicsStep = () => {
 
   return (
     <div className="max-w-2xl mx-auto">
-      <h2 className="text-2xl font-bold text-gray-900">Company Information</h2>
-      <p className="mt-2 text-sm text-gray-600">
+      <h2 className="text-2xl font-bold">Company Information</h2>
+      <p className="mt-2 text-sm text-secondary-text">
         Start by entering your company's Unique Entity ID (UEI). We will use it to securely retrieve your basic information from SAM.gov. This information is required for DCSA verification.
       </p>
 
       <div className="mt-8 space-y-6">
         {/* UEI Input */}
         <div className="relative">
-          <label htmlFor="uei" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="uei" className="block text-sm font-medium text-secondary-text">
             Unique Entity ID (UEI)
           </label>
           <input
@@ -30,7 +30,7 @@ export const CompanyBasicsStep = () => {
             value={applicationData.uei}
             onChange={handleUeiChange}
             maxLength={12}
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            className="form-input mt-1 block w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 sm:text-sm"
             placeholder="Enter 12-character UEI"
           />
           {processingStatus === 'fetching' && (
@@ -47,7 +47,7 @@ export const CompanyBasicsStep = () => {
 
         {/* Auto-filled Company Name */}
         <div>
-          <label htmlFor="companyName" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="companyName" className="block text-sm font-medium text-secondary-text">
             Legal Business Name
           </label>
           <input
@@ -55,13 +55,13 @@ export const CompanyBasicsStep = () => {
             id="companyName"
             value={applicationData.companyName}
             readOnly
-            className="mt-1 block w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md shadow-sm sm:text-sm"
+            className="form-input mt-1 block w-full px-3 py-2 bg-accent-bg border rounded-md shadow-sm sm:text-sm"
           />
         </div>
         
         {/* Auto-filled CAGE Code */}
         <div>
-          <label htmlFor="cageCode" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="cageCode" className="block text-sm font-medium text-secondary-text">
             CAGE Code
           </label>
           <input
@@ -69,7 +69,7 @@ export const CompanyBasicsStep = () => {
             id="cageCode"
             value={applicationData.cageCode}
             readOnly
-            className="mt-1 block w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md shadow-sm sm:text-sm"
+            className="form-input mt-1 block w-full px-3 py-2 bg-accent-bg border rounded-md shadow-sm sm:text-sm"
           />
         </div>
       </div>
