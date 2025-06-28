@@ -26,7 +26,8 @@
     "react-hot-toast": "^2.4.1"
   },
   "scripts": {
-    "start": "react-scripts start",
+    "start": "PORT=$(node -e 'const net=require("net");for(let p=3000;p<=3009;p++){const s=net.createServer();s.listen(p,()=>{console.log(p);s.close();process.exit()}).on("error",()=>{})}') react-scripts start",
+    "start:win": "for /L %i in (3000,1,3009) do @netstat -an | find ":%%i " >nul || (set PORT=%i && react-scripts start && goto :eof)",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",

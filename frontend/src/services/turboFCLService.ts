@@ -3,9 +3,34 @@ import { ApplicationData, ChatMessage, SAMData, ValidationIssue, AIInsight } fro
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 
+// Auto-detect backend port
+const detectBackendPort = async () => {
+  for (let port = 8000; port <= 8009; port++) {
+    try {
+      const response = await fetch(`http://localhost:${port}/health`, { 
+        method: 'GET',
+        signal: AbortSignal.timeout(1000)
+      });
+      if (response.ok) {
+        return `http://localhost:${port}`;
+      }
+    } catch (e) {
+      continue;
+    }
+  }
+  return 'http://localhost:8000'; // fallback
+};
+
+// Update API base URL on startup
+let dynamicApiUrl = API_BASE_URL;
+detectBackendPort().then(url => {
+  dynamicApiUrl = url;
+  apiClient.defaults.baseURL = url;
+});
+
 // Create axios instance with auth interceptor
 const apiClient = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: dynamicApiUrl || API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },

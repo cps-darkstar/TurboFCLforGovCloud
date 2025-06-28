@@ -191,7 +191,7 @@ class ValidationService:
         application: FCLApplicationCreate,
         sam_data: Optional[SAMData] = None,
         edgar_data: Optional[EDGARData] = None,
-        uploaded_documents: List[str] = None,
+        uploaded_documents: Optional[List[str]] = None,
         kmp_count: int = 0
     ) -> Tuple[List[ValidationIssue], List[AIInsight]]:
         """
@@ -327,6 +327,15 @@ class ValidationService:
         """Validate entity type matches SAM.gov"""
         issues = []
         
+        if not sam_data.entity_structure:
+            issues.append(ValidationIssue(
+                type="warning",
+                field="entity_type",
+                message="SAM.gov entity structure is missing.",
+                source="SAM.gov Validation"
+            ))
+            return issues
+
         sam_entity = sam_data.entity_structure.upper()
         expected_type = self.rules.SAM_ENTITY_MAP.get(sam_entity)
         
