@@ -1067,12 +1067,12 @@ output "cognito_client_id" {
 
 output "ecs_cluster_name" {
   description = "The name of the ECS cluster"
-  value       = module.ecs_cluster.name
+  value       = module.ecs_cluster.cluster_name
 }
 
 output "private_subnet_ids" {
   description = "List of private subnet IDs"
-  value       = module.vpc.private_subnets_ids
+  value       = module.vpc.private_subnets
 }
 
 output "ecs_tasks_sg_id" {
