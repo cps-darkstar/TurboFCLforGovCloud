@@ -3,28 +3,25 @@
  * Addresses 25% confusion rate with guided decision tree
  */
 
-import React, { useState, useEffect } from 'react';
 import {
-  Globe,
-  Building,
-  Users,
-  DollarSign,
-  Cpu,
-  FileText,
-  AlertTriangle,
-  Info,
-  HelpCircle,
-  CheckCircle,
-  XCircle,
-  ChevronRight
+    AlertTriangle,
+    Building,
+    CheckCircle,
+    ChevronRight,
+    Cpu,
+    DollarSign,
+    FileText,
+    Globe,
+    HelpCircle,
+    Info,
+    Users,
+    XCircle
 } from 'lucide-react';
-import { 
-  FOCI_CONDITIONS,
-  FOCI_THRESHOLDS,
-  MITIGATION_TYPES,
-  PROCESSING_TIMES
-} from '../constants/businessRules';
-import { useFOCIAssessment } from '../hooks/useValidation';
+import React, { useEffect, useState } from 'react';
+import {
+    MITIGATION_TYPES
+} from '../../../constants/businessRules';
+import { useFOCIAssessment } from '../../../hooks/useValidation';
 
 interface FOCIAssessmentProps {
   onAssessmentComplete: (fociData: {
@@ -52,7 +49,7 @@ interface FOCIQuestion {
   followUp?: string;
 }
 
-export const FOCIAssessment: React.FC<FOCIAssessmentProps> = ({ onAssessmentComplete }) => {
+export const FOCIAssessmentStep: React.FC<FOCIAssessmentProps> = ({ onAssessmentComplete }) => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, any>>({});
   const [showHelp, setShowHelp] = useState<Record<string, boolean>>({});
@@ -410,4 +407,6 @@ export const FOCIAssessment: React.FC<FOCIAssessmentProps> = ({ onAssessmentComp
       </div>
     </div>
   );
-}; 
+};
+
+export default FOCIAssessmentStep; 

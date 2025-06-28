@@ -14,6 +14,8 @@ const ApplicationPage: React.FC = () => {
         return <WelcomeStep />;
       case 1:
         return <CompanyBasicsStep />;
+      case 2:
+        return <EntityTypeStep />;
       // Other steps will be added here
       default:
         return <WelcomeStep />;
