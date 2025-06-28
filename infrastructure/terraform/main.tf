@@ -58,19 +58,24 @@ resource "aws_kms_alias" "turbofcl" {
 
 # VPC Configuration
 module "vpc" {
-  source = "./modules/vpc"
+  source = "terraform-aws-modules/vpc/aws"
+  version = "5.5.2"
   
-  project_name         = var.project_name
-  environment          = var.environment
-  vpc_cidr            = var.vpc_cidr
-  availability_zones  = data.aws_availability_zones.available.names
+  name                = var.project_name
+  cidr                = var.vpc_cidr
+  
+  azs                 = data.aws_availability_zones.available.names
   private_subnets     = var.private_subnets
   public_subnets      = var.public_subnets
   database_subnets    = var.database_subnets
-  enable_nat_gateway  = true
-  single_nat_gateway  = var.environment != "production"
-  enable_vpn_gateway  = var.environment == "production"
-  enable_flow_logs    = true
+  
+  enable_nat_gateway   = true
+  single_nat_gateway   = var.environment != "production"
+  enable_vpn_gateway   = var.environment == "production"
+  
+  enable_flow_log                      = true
+  create_flow_log_cloudwatch_log_group = true
+  create_flow_log_cloudwatch_iam_role  = true
   
   tags = {
     Name = "${var.project_name}-vpc"
@@ -79,47 +84,52 @@ module "vpc" {
 
 # Security Groups
 module "security_groups" {
-  source = "./modules/security"
+  source = "terraform-aws-modules/security-group/aws"
+  version = "5.1.0"
   
   project_name = var.project_name
-  environment  = var.environment
   vpc_id       = module.vpc.vpc_id
-  vpc_cidr     = var.vpc_cidr
 }
 
 # RDS PostgreSQL with pgvector
 module "database" {
-  source = "./modules/rds"
+  source = "terraform-aws-modules/rds/aws"
+  version = "6.1.0"
   
   project_name               = var.project_name
-  environment                = var.environment
-  vpc_id                     = module.vpc.vpc_id
-  database_subnets           = module.vpc.database_subnets
-  security_group_id          = module.security_groups.rds_security_group_id
+  engine                     = "postgres"
+  engine_version             = "15.3"
+  family                     = "postgres15"
+  major_engine_version       = "15"
   instance_class             = var.rds_instance_class
+  
   allocated_storage          = var.rds_allocated_storage
   max_allocated_storage      = var.rds_max_allocated_storage
+  
+  db_name                    = "${var.project_name}db"
+  db_username                = "turbofcladmin"
+  
+  vpc_id                     = module.vpc.vpc_id
+  db_subnet_group_name       = module.vpc.database_subnet_group
+  
   backup_retention_period    = var.rds_backup_retention_period
   backup_window              = var.rds_backup_window
   maintenance_window         = var.rds_maintenance_window
-  enable_performance_insights = true
-  kms_key_id                 = aws_kms_key.turbofcl.arn
   
-  # Enable pgvector extension
-  enable_pgvector = true
+  performance_insights_enabled = true
+  kms_key_id                 = aws_kms_key.turbofcl.arn
 }
 
 # S3 Buckets
 module "s3_buckets" {
-  source = "./modules/s3"
+  source = "terraform-aws-modules/s3-bucket/aws"
+  version = "3.15.1"
   
   project_name = var.project_name
-  environment  = var.environment
-  kms_key_arn  = aws_kms_key.turbofcl.arn
   
   buckets = {
     documents = {
-      name = "${var.project_name}-documents-gov"
+      bucket_name = "${var.project_name}-documents-gov"
       versioning = true
       lifecycle_rules = [{
         id      = "archive-old-documents"
@@ -131,11 +141,11 @@ module "s3_buckets" {
       }]
     }
     models = {
-      name = "${var.project_name}-models-gov"
+      bucket_name = "${var.project_name}-models-gov"
       versioning = true
     }
     logs = {
-      name = "${var.project_name}-logs-gov"
+      bucket_name = "${var.project_name}-logs-gov"
       versioning = false
       lifecycle_rules = [{
         id      = "delete-old-logs"
@@ -146,14 +156,16 @@ module "s3_buckets" {
       }]
     }
   }
+  
+  kms_key_arn  = aws_kms_key.turbofcl.arn
 }
 
 # Cognito User Pool
 module "cognito" {
   source = "terraform-aws-modules/cognito-user-pool/aws"
+  version = "2.2.0"
   
   project_name = var.project_name
-  environment  = var.environment
   
   # MFA configuration for GovCloud
   mfa_configuration = "ON"
@@ -168,158 +180,175 @@ module "cognito" {
   }
   
   # Custom attributes for FCL roles
-  custom_attributes = {
-    role = {
-      type = "String"
-      min_length = 1
-      max_length = 50
+  schema_attributes = [
+    {
+      name                = "role"
+      attribute_data_type = "String"
+      mutable             = true
+      required            = false
+    },
+    {
+      name                = "company_name"
+      attribute_data_type = "String"
+      mutable             = true
+      required            = false
+    },
+    {
+      name                = "test_scenario"
+      attribute_data_type = "String"
+      mutable             = true
+      required            = false
     }
-    company_name = {
-      type = "String"
-      min_length = 1
-      max_length = 500
-    }
-    test_scenario = {
-      type = "String"
-      min_length = 0
-      max_length = 200
-    }
-  }
+  ]
 }
 
 # ECS Cluster
 module "ecs_cluster" {
-  source = "./modules/ecs"
-  
-  project_name = var.project_name
-  environment  = var.environment
-  
-  # Enable Container Insights
-  container_insights = true
-  
-  # Capacity providers
-  capacity_providers = ["FARGATE", "FARGATE_SPOT"]
-  
-  default_capacity_provider_strategy = [
-    {
-      capacity_provider = "FARGATE"
-      weight           = 1
-      base             = 1
-    },
-    {
-      capacity_provider = "FARGATE_SPOT"
-      weight           = 4
-      base             = 0
+  source = "terraform-aws-modules/ecs/aws"
+  version = "5.12.1"
+
+  cluster_name = "${var.project_name}-${var.environment}"
+
+  fargate_capacity_providers = {
+    FARGATE = {
+      default_capacity_provider_strategy = {
+        weight = 50
+      }
     }
-  ]
+    FARGATE_SPOT = {
+      default_capacity_provider_strategy = {
+        weight = 50
+      }
+    }
+  }
 }
 
 # ALB for ECS services
 module "alb" {
-  source = "./modules/alb"
+  source = "terraform-aws-modules/alb/aws"
+  version = "9.4.0"
   
-  project_name          = var.project_name
-  environment           = var.environment
+  name = "${var.project_name}-alb"
+  
+  load_balancer_type = "application"
+  
   vpc_id                = module.vpc.vpc_id
-  public_subnets        = module.vpc.public_subnets
-  security_group_id     = module.security_groups.alb_security_group_id
-  certificate_arn       = var.certificate_arn
-  enable_deletion_protection = var.environment == "production"
+  subnets               = module.vpc.public_subnets
+  security_groups       = [module.security_groups.default_security_group_id]
   
-  # WAF configuration
-  enable_waf = true
-  waf_rules = [
-    "AWSManagedRulesCommonRuleSet",
-    "AWSManagedRulesKnownBadInputsRuleSet",
-    "AWSManagedRulesSQLiRuleSet",
-    "AWSManagedRulesLinuxRuleSet"
-  ]
+  listeners = {
+    ex-http-https-redirect = {
+      port     = 80
+      protocol = "HTTP"
+      redirect = {
+        port        = "443"
+        protocol    = "HTTPS"
+        status_code = "HTTP_301"
+      }
+    }
+    ex-https-fixed-response = {
+      port            = 443
+      protocol        = "HTTPS"
+      certificate_arn = var.certificate_arn
+      fixed_response = {
+        content_type = "text/plain"
+        message_body = "Fixed response"
+        status_code  = "200"
+      }
+    }
+  }
   
   # Access logs
-  access_logs_bucket = module.s3_buckets.bucket_ids["logs"]
+  access_logs = {
+    bucket = module.s3_buckets.s3_bucket_id["logs"]
+  }
 }
 
 # ECS Services
 module "backend_service" {
-  source = "./modules/ecs-service"
+  source = "terraform-aws-modules/ecs/aws//modules/service"
   
-  project_name         = var.project_name
-  environment          = var.environment
-  service_name         = "backend"
-  cluster_id           = module.ecs_cluster.cluster_id
-  vpc_id               = module.vpc.vpc_id
-  private_subnets      = module.vpc.private_subnets
-  security_group_id    = module.security_groups.ecs_security_group_id
-  target_group_arn     = module.alb.backend_target_group_arn
+  name = "backend"
   
-  # Container configuration
-  container_image      = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${var.aws_region}.amazonaws.com/${var.project_name}-backend:latest"
-  container_port       = 8000
-  cpu                  = 512
-  memory               = 1024
-  desired_count        = var.environment == "production" ? 3 : 1
+  cluster_arn = module.ecs_cluster.cluster_arn
   
-  # Environment variables from SSM/Secrets Manager
-  environment_variables = {
-    ENVIRONMENT = var.environment
-    AWS_REGION  = var.aws_region
-    DATABASE_URL = "postgresql://${module.database.db_username}:${module.database.db_password}@${module.database.db_endpoint}/${module.database.db_name}"
-    COGNITO_USER_POOL_ID = module.cognito.user_pool_id
-    COGNITO_CLIENT_ID    = module.cognito.client_id
-    S3_DOCUMENTS_BUCKET  = module.s3_buckets.bucket_ids["documents"]
-    S3_MODELS_BUCKET     = module.s3_buckets.bucket_ids["models"]
-    ENABLE_XRAY_TRACING  = "true"
+  launch_type = "FARGATE"
+  
+  network_configuration = {
+    subnets          = module.vpc.private_subnets
+    security_groups  = [module.security_groups.default_security_group_id]
+    assign_public_ip = false
   }
   
-  # Secrets from Secrets Manager
-  secrets = {
-    SECRET_KEY = aws_secretsmanager_secret.app_secret_key.arn
-    SAM_GOV_API_KEY = aws_secretsmanager_secret.sam_gov_api_key.arn
+  # Container configuration
+  container_definitions = {
+    backend = {
+      image = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${var.aws_region}.amazonaws.com/${var.project_name}-backend:latest"
+      port_mappings = [{
+        containerPort = 8000
+        protocol      = "tcp"
+      }]
+      cpu    = 512
+      memory = 1024
+      
+      environment = [
+        { name = "ENVIRONMENT", value = var.environment },
+        { name = "AWS_REGION", value = var.aws_region }
+      ]
+      
+      secrets = [
+        { name = "DATABASE_URL", valueFrom = module.database.db_instance_address },
+        { name = "COGNITO_USER_POOL_ID", valueFrom = module.cognito.user_pool_id },
+      ]
+    }
   }
   
   # Auto-scaling
-  enable_autoscaling = true
-  min_capacity       = var.environment == "production" ? 2 : 1
-  max_capacity       = var.environment == "production" ? 10 : 3
+  autoscaling_min_capacity = var.environment == "production" ? 2 : 1
+  autoscaling_max_capacity = var.environment == "production" ? 10 : 3
   
   # Health check
   health_check_grace_period_seconds = 60
-  health_check_path                 = "/api/health"
 }
 
 module "frontend_service" {
-  source = "./modules/ecs-service"
+  source = "terraform-aws-modules/ecs/aws//modules/service"
   
-  project_name         = var.project_name
-  environment          = var.environment
-  service_name         = "frontend"
-  cluster_id           = module.ecs_cluster.cluster_id
-  vpc_id               = module.vpc.vpc_id
-  private_subnets      = module.vpc.private_subnets
-  security_group_id    = module.security_groups.ecs_security_group_id
-  target_group_arn     = module.alb.frontend_target_group_arn
+  name = "frontend"
+  
+  cluster_arn = module.ecs_cluster.cluster_arn
+  
+  launch_type = "FARGATE"
+  
+  network_configuration = {
+    subnets          = module.vpc.private_subnets
+    security_groups  = [module.security_groups.default_security_group_id]
+    assign_public_ip = false
+  }
   
   # Container configuration
-  container_image      = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${var.aws_region}.amazonaws.com/${var.project_name}-frontend:latest"
-  container_port       = 3000
-  cpu                  = 256
-  memory               = 512
-  desired_count        = var.environment == "production" ? 2 : 1
-  
-  # Environment variables
-  environment_variables = {
-    REACT_APP_API_URL = "https://${module.alb.alb_dns_name}/api"
-    REACT_APP_ENVIRONMENT = var.environment
+  container_definitions = {
+    frontend = {
+      image = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${var.aws_region}.amazonaws.com/${var.project_name}-frontend:latest"
+      port_mappings = [{
+        containerPort = 3000
+        protocol      = "tcp"
+      }]
+      cpu    = 256
+      memory = 512
+      
+      environment = [
+        { name = "REACT_APP_API_URL", value = "https://${module.alb.dns_name}/api" },
+      ]
+    }
   }
   
   # Auto-scaling
-  enable_autoscaling = true
-  min_capacity       = var.environment == "production" ? 2 : 1
+  autoscaling_min_capacity = var.environment == "production" ? 2 : 1
   max_capacity       = var.environment == "production" ? 6 : 2
   
   # Health check
   health_check_grace_period_seconds = 30
-  health_check_path                 = "/"
 }
 
 # ECR Repositories
@@ -353,7 +382,7 @@ resource "aws_ecr_repository" "frontend" {
 
 # Secrets Manager
 resource "aws_secretsmanager_secret" "app_secret_key" {
-  name_prefix = "${var.project_name}-secret-key-"
+  name        = "${var.project_name}-secret-key"
   description = "Application secret key for JWT signing"
   kms_key_id  = aws_kms_key.turbofcl.id
 }
@@ -371,7 +400,7 @@ resource "random_password" "app_secret_key" {
 }
 
 resource "aws_secretsmanager_secret" "sam_gov_api_key" {
-  name_prefix = "${var.project_name}-sam-gov-api-"
+  name        = "${var.project_name}-sam-gov-api"
   description = "SAM.gov API key"
   kms_key_id  = aws_kms_key.turbofcl.id
 }
@@ -391,7 +420,7 @@ resource "aws_ssm_parameter" "sagemaker_endpoints" {
 
 # CloudWatch Log Groups
 resource "aws_cloudwatch_log_group" "ecs_logs" {
-  name              = "/ecs/${var.project_name}"
+  name              = "/ecs/${var.project_name}/${var.environment}"
   retention_in_days = 30
   kms_key_id        = aws_kms_key.turbofcl.arn
 }
@@ -400,15 +429,19 @@ resource "aws_cloudwatch_log_group" "ecs_logs" {
 module "redis" {
   count = var.enable_redis ? 1 : 0
   
-  source = "./modules/elasticache"
+  source = "terraform-aws-modules/elasticache/aws"
+  version = "1.5.0"
   
-  project_name      = var.project_name
-  environment       = var.environment
-  vpc_id            = module.vpc.vpc_id
-  private_subnets   = module.vpc.private_subnets
-  security_group_id = module.security_groups.redis_security_group_id
-  node_type         = var.redis_node_type
-  num_cache_nodes   = var.redis_num_nodes
+  cluster_id           = "${var.project_name}-${var.environment}"
+  engine               = "redis"
+  family               = "redis7"
+  
+  vpc_id               = module.vpc.vpc_id
+  subnets              = module.vpc.private_subnets
+  security_group_ids   = [module.security_groups.default_security_group_id]
+  
+  node_type            = var.redis_node_type
+  num_cache_nodes      = var.redis_num_nodes
   
   # Encryption at rest and in transit
   at_rest_encryption_enabled = true
@@ -419,25 +452,18 @@ module "redis" {
 
 # CloudWatch Alarms
 module "monitoring" {
-  source = "./modules/monitoring"
-  
+  source = "terraform-aws-modules/cloudwatch/aws"
+  version = "4.2.0"
+
   project_name = var.project_name
   environment  = var.environment
   
   # ALB alarms
-  alb_arn_suffix = module.alb.alb_arn_suffix
+  alb_arn = module.alb.arn
   
   # ECS service alarms
-  ecs_services = {
-    backend = {
-      cluster_name = module.ecs_cluster.cluster_name
-      service_name = module.backend_service.service_name
-    }
-    frontend = {
-      cluster_name = module.ecs_cluster.cluster_name
-      service_name = module.frontend_service.service_name
-    }
-  }
+  ecs_cluster_name = module.ecs_cluster.cluster_name
+  ecs_service_name = module.backend_service.name
   
   # RDS alarms
   db_instance_id = module.database.db_instance_id
@@ -461,12 +487,12 @@ resource "aws_sns_topic_subscription" "alerts_email" {
 # Outputs
 output "alb_endpoint" {
   description = "ALB endpoint URL"
-  value       = "https://${module.alb.alb_dns_name}"
+  value       = module.alb.load_balancer_dns_name
 }
 
 output "database_endpoint" {
   description = "RDS endpoint"
-  value       = module.database.db_endpoint
+  value       = module.database.db_instance_address
   sensitive   = true
 }
 
@@ -477,5 +503,5 @@ output "cognito_user_pool_id" {
 
 output "cognito_client_id" {
   description = "Cognito Client ID"
-  value       = module.cognito.client_id
+  value       = module.cognito.user_pool_clients["default"].id
 } 
