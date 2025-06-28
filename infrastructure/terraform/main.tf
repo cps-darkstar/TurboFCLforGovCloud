@@ -36,6 +36,7 @@ provider "aws" {
 
 # Data sources
 data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
 data "aws_availability_zones" "available" {
   state = "available"
 }
@@ -45,6 +46,36 @@ resource "aws_kms_key" "turbofcl" {
   description             = "TurboFCL encryption key"
   deletion_window_in_days = 30
   enable_key_rotation     = true
+  
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Sid    = "Enable IAM User Permissions"
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
+        }
+        Action = "kms:*"
+        Resource = "*"
+      },
+      {
+        Sid    = "Allow CloudWatch Logs"
+        Effect = "Allow"
+        Principal = {
+          Service = "logs.${var.aws_region}.amazonaws.com"
+        }
+        Action = [
+          "kms:Encrypt*",
+          "kms:Decrypt*",
+          "kms:ReEncrypt*",
+          "kms:GenerateDataKey*",
+          "kms:Describe*"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
   
   tags = {
     Name = "${var.project_name}-kms-key"
@@ -271,6 +302,9 @@ resource "aws_cognito_user_pool" "main" {
   
   # MFA configuration for GovCloud
   mfa_configuration = "ON"
+  software_token_mfa_configuration {
+    enabled = true
+  }
   
   # Password policy (NIST 800-63B compliant)
   password_policy {
@@ -725,7 +759,7 @@ resource "aws_iam_role" "ecs_task_execution" {
 
 resource "aws_iam_role_policy_attachment" "ecs_task_execution" {
   role       = aws_iam_role.ecs_task_execution.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
 resource "aws_iam_role_policy" "ecs_task_execution_secrets" {
@@ -753,7 +787,7 @@ resource "aws_iam_role_policy" "ecs_task_execution_secrets" {
           "ssm:GetParameter"
         ]
         Resource = [
-          "arn:aws:ssm:${var.aws_region}:${data.aws_caller_identity.current.account_id}:parameter/turbofcl/*"
+          "arn:${data.aws_partition.current.partition}:ssm:${var.aws_region}:${data.aws_caller_identity.current.account_id}:parameter/turbofcl/*"
         ]
       }
     ]
@@ -800,7 +834,7 @@ resource "aws_iam_role_policy" "ecs_task" {
           "sagemaker:InvokeEndpoint"
         ]
         Resource = [
-          "arn:aws:sagemaker:${var.aws_region}:${data.aws_caller_identity.current.account_id}:endpoint/turbofcl-*"
+          "arn:${data.aws_partition.current.partition}:sagemaker:${var.aws_region}:${data.aws_caller_identity.current.account_id}:endpoint/turbofcl-*"
         ]
       }
     ]
