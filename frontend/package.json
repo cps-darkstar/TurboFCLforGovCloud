@@ -22,7 +22,8 @@
     "react-query": "^3.39.3",
     "zustand": "^4.4.7",
     "date-fns": "^2.30.0",
-    "clsx": "^2.0.0"
+    "clsx": "^2.0.0",
+    "react-hot-toast": "^2.4.1"
   },
   "scripts": {
     "start": "react-scripts start",
