@@ -1061,6 +1061,26 @@ output "cognito_user_pool_id" {
 }
 
 output "cognito_client_id" {
-  description = "Cognito Client ID"
+  description = "The ID of the Cognito User Pool Client"
   value       = aws_cognito_user_pool_client.main.id
+}
+
+output "ecs_cluster_name" {
+  description = "The name of the ECS cluster"
+  value       = module.ecs_cluster.name
+}
+
+output "private_subnet_ids" {
+  description = "List of private subnet IDs"
+  value       = module.vpc.private_subnets_ids
+}
+
+output "ecs_tasks_sg_id" {
+  description = "The ID of the security group for ECS tasks"
+  value       = module.security_groups.security_group_id
+}
+
+output "db_connection_secret_arn" {
+  description = "ARN of the Secrets Manager secret for the DB connection string"
+  value       = aws_secretsmanager_secret.db_connection.arn
 } 

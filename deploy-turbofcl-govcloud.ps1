@@ -2,16 +2,16 @@
 # Deploys the complete TurboFCL application to AWS GovCloud West 1
 
 param(
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [string]$Environment = "production",
     
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [switch]$SkipInfrastructure,
     
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [switch]$SkipModels,
     
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [switch]$Force
 )
 
@@ -39,7 +39,8 @@ try {
     $identity = aws sts get-caller-identity --profile $AWS_PROFILE --region $AWS_REGION | ConvertFrom-Json
     Write-Success "✓ Authenticated as: $($identity.Arn)"
     $AWS_ACCOUNT_ID = $identity.Account
-} catch {
+}
+catch {
     Write-Error "✗ Failed to authenticate with AWS. Please configure your GovCloud credentials."
     exit 1
 }
@@ -60,13 +61,15 @@ if (-not $SkipInfrastructure) {
             terraform apply tfplan
             Write-Success "✓ Infrastructure deployed successfully"
         }
-    } catch {
+    }
+    catch {
         Write-Error "✗ Infrastructure deployment failed: $_"
         Pop-Location
         exit 1
     }
     Pop-Location
-} else {
+}
+else {
     Write-Warning "Skipping infrastructure deployment"
 }
 
@@ -88,7 +91,8 @@ try {
     docker push ${ECR_BACKEND}:latest
     
     Write-Success "✓ Backend image pushed successfully"
-} catch {
+}
+catch {
     Write-Error "✗ Backend image build failed: $_"
     Pop-Location
     exit 1
@@ -111,7 +115,8 @@ try {
     docker push ${ECR_FRONTEND}:latest
     
     Write-Success "✓ Frontend image pushed successfully"
-} catch {
+}
+catch {
     Write-Error "✗ Frontend image build failed: $_"
     Pop-Location
     exit 1
@@ -121,43 +126,98 @@ Pop-Location
 # Step 4: Run database migrations
 Write-Info "`nStep 4: Running database migrations..."
 try {
-    # Get database endpoint from Terraform outputs
-    $DB_ENDPOINT = terraform output -state=infra/terraform.tfstate -raw database_endpoint
-    $DB_PASSWORD = aws ssm get-parameter --name "/$Environment/$PROJECT_NAME/db_password" --with-decryption --query 'Parameter.Value' --output text --profile $AWS_PROFILE --region $AWS_REGION
+    # Get necessary values from Terraform outputs
+    Write-Info "Fetching network and database configuration..."
+    $TfStatePath = "infra/terraform/terraform.tfstate"
+    $ECS_CLUSTER_NAME = terraform output -state=$TfStatePath -raw ecs_cluster_name
+    $PRIVATE_SUBNET_IDS_JSON = terraform output -state=$TfStatePath -raw private_subnet_ids
+    $PRIVATE_SUBNET_IDS = $PRIVATE_SUBNET_IDS_JSON | ConvertFrom-Json
+    $ECS_TASKS_SG_ID = terraform output -state=$TfStatePath -raw ecs_tasks_sg_id
+    $DB_CONNECTION_SECRET_ARN = terraform output -state=$TfStatePath -raw db_connection_secret_arn
+
+    if (-not $DB_CONNECTION_SECRET_ARN) {
+        Write-Error "✗ Could not find Secrets Manager secret for DB connection. Please apply Terraform changes."
+        exit 1
+    }
+
+    # Define the migration task definition
+    $TASK_FAMILY = "${PROJECT_NAME}-migrations"
+    $LogGroupName = "/ecs/${PROJECT_NAME}-migrations"
+    $EXECUTION_ROLE_ARN = "arn:aws:iam::$AWS_ACCOUNT_ID:role/${PROJECT_NAME}-ecs-task-execution"
     
-    # Run migrations via ECS task
-    $TASK_DEFINITION = @"
+    # Ensure log group exists. Ignore errors if it already exists.
+    aws logs create-log-group --log-group-name $LogGroupName --kms-key-id "alias/${PROJECT_NAME}" --profile $AWS_PROFILE --region $AWS_REGION 2>$null
+
+    $TASK_DEFINITION_JSON = @"
 {
-    "family": "turbofcl-migrations",
+    "family": "$TASK_FAMILY",
     "networkMode": "awsvpc",
     "requiresCompatibilities": ["FARGATE"],
     "cpu": "256",
     "memory": "512",
+    "executionRoleArn": "$EXECUTION_ROLE_ARN",
     "containerDefinitions": [{
         "name": "migrations",
         "image": "${ECR_BACKEND}:latest",
         "command": ["alembic", "upgrade", "head"],
-        "environment": [
-            {"name": "DATABASE_URL", "value": "postgresql://turbofcl:$DB_PASSWORD@$DB_ENDPOINT/turbofcl"}
+        "secrets": [
+            { "name": "DATABASE_URL", "valueFrom": "${DB_CONNECTION_SECRET_ARN}:connection_string::" }
         ],
         "logConfiguration": {
             "logDriver": "awslogs",
             "options": {
-                "awslogs-group": "/ecs/turbofcl-migrations",
+                "awslogs-group": "$LogGroupName",
                 "awslogs-region": "$AWS_REGION",
-                "awslogs-stream-prefix": "ecs"
+                "awslogs-stream-prefix": "ecs-migrations"
             }
         }
     }]
 }
 "@
     
-    # Register task definition and run
-    $TASK_DEF_ARN = aws ecs register-task-definition --cli-input-json $TASK_DEFINITION --profile $AWS_PROFILE --region $AWS_REGION --query 'taskDefinition.taskDefinitionArn' --output text
+    Write-Info "Registering migration task definition..."
+    $TASK_DEF_ARN = aws ecs register-task-definition --cli-input-json $TASK_DEFINITION_JSON --profile $AWS_PROFILE --region $AWS_REGION --query 'taskDefinition.taskDefinitionArn' --output text
+    Write-Success "✓ Task definition registered: $TASK_DEF_ARN"
+
+    # Run the migration task
+    Write-Info "Running migration task on ECS Fargate..."
+    $SubnetsString = '"' + ($PRIVATE_SUBNET_IDS -join '","') + '"'
     
-    Write-Success "✓ Database migrations completed"
-} catch {
-    Write-Warning "Database migration failed (may already be applied): $_"
+    $runTaskResult = aws ecs run-task `
+        --cluster $ECS_CLUSTER_NAME `
+        --task-definition $TASK_DEF_ARN `
+        --launch-type "FARGATE" `
+        --network-configuration "awsvpcConfiguration={subnets=[$SubnetsString],securityGroups=[$ECS_TASKS_SG_ID],assignPublicIp=DISABLED}" `
+        --profile $AWS_PROFILE `
+        --region $AWS_REGION `
+        --enable-ecs-managed-tags `
+        --propagate-tags "TASK_DEFINITION" `
+    | ConvertFrom-Json
+        
+    $taskArn = $runTaskResult.tasks[0].taskArn
+    Write-Info "Migration task started: $taskArn"
+    
+    # Wait for the task to complete
+    Write-Info "Waiting for migration task to complete..."
+    aws ecs wait tasks-stopped --cluster $ECS_CLUSTER_NAME --tasks $taskArn --profile $AWS_PROFILE --region $AWS_REGION
+    
+    # Check if the task succeeded
+    $taskResult = aws ecs describe-tasks --cluster $ECS_CLUSTER_NAME --tasks $taskArn --profile $AWS_PROFILE --region $AWS_REGION | ConvertFrom-Json
+    $exitCode = $taskResult.tasks[0].containers[0].exitCode
+    
+    if ($exitCode -eq 0) {
+        Write-Success "✓ Database migrations completed successfully"
+    }
+    else {
+        $reason = $taskResult.tasks[0].stoppedReason
+        Write-Error "✗ Database migration task failed with exit code: $exitCode. Reason: $reason. Check CloudWatch logs in group '$LogGroupName' for details."
+        exit 1
+    }
+
+}
+catch {
+    Write-Error "✗ An error occurred during database migration: $_"
+    exit 1
 }
 
 # Step 5: Deploy SageMaker models
@@ -165,10 +225,15 @@ if (-not $SkipModels) {
     Write-Info "`nStep 5: Deploying SageMaker models..."
     
     # Deploy models using Python script
-    python scripts/deploy_sagemaker_models.py --region $AWS_REGION --profile $AWS_PROFILE
-    
-    Write-Success "✓ SageMaker models deployed"
-} else {
+    try {
+        python scripts/deploy_sagemaker_models.py --region $AWS_REGION --profile $AWS_PROFILE
+        Write-Success "✓ SageMaker models deployed"
+    }
+    catch {
+        Write-Error "✗ SageMaker model deployment failed: $_"
+    }
+}
+else {
     Write-Warning "Skipping SageMaker model deployment"
 }
 
@@ -191,7 +256,8 @@ try {
         --region $AWS_REGION
     
     Write-Success "✓ ECS services updated"
-} catch {
+}
+catch {
     Write-Error "✗ ECS service update failed: $_"
     exit 1
 }
@@ -211,7 +277,8 @@ try {
     if ($response.StatusCode -eq 200) {
         Write-Success "✓ Backend health check passed"
     }
-} catch {
+}
+catch {
     Write-Warning "Backend health check failed (services may still be starting)"
 }
 
@@ -233,12 +300,12 @@ Write-Warning "IMPORTANT: Update security group rules to restrict access!"
 
 # Save deployment info
 $deploymentInfo = @{
-    Timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-    Environment = $Environment
-    Region = $AWS_REGION
-    AccountId = $AWS_ACCOUNT_ID
-    ALBEndpoint = $ALB_ENDPOINT
-    BackendImage = "${ECR_BACKEND}:latest"
+    Timestamp     = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    Environment   = $Environment
+    Region        = $AWS_REGION
+    AccountId     = $AWS_ACCOUNT_ID
+    ALBEndpoint   = $ALB_ENDPOINT
+    BackendImage  = "${ECR_BACKEND}:latest"
     FrontendImage = "${ECR_FRONTEND}:latest"
 }
 
