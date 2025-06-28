@@ -3,24 +3,23 @@
  * Addresses 40% abandonment rate with improved UX
  */
 
-import React, { useState, useCallback, useRef } from 'react';
 import {
-  Upload,
-  FileText,
-  CheckCircle,
-  AlertTriangle,
-  X,
-  Loader,
-  FileCheck,
-  HelpCircle,
-  ChevronDown,
-  ChevronUp
+    AlertTriangle,
+    CheckCircle,
+    ChevronDown,
+    ChevronUp,
+    FileCheck,
+    FileText,
+    HelpCircle,
+    Upload,
+    X
 } from 'lucide-react';
-import { ENTITY_REQUIREMENTS, VALIDATION_PATTERNS, ERROR_MESSAGES, EntityType } from '../constants/businessRules';
-import { validateDocument } from '../hooks/useValidation';
-import { Document as DocType } from '../types/turbofcl';
+import React, { useCallback, useRef, useState } from 'react';
+import { ENTITY_REQUIREMENTS, EntityType } from '../../../constants/businessRules';
+import { validateDocument } from '../../../hooks/useValidation';
+import { Document as DocType } from '../../../types/turbofcl';
 
-interface DocumentUploadProps {
+interface DocumentUploadStepProps {
   entityType: EntityType;
   uploadedDocuments: DocType[];
   onDocumentUpload: (file: File) => Promise<void>;
@@ -34,7 +33,7 @@ interface DocumentRequirement {
   file?: DocType;
 }
 
-export const DocumentUpload: React.FC<DocumentUploadProps> = ({
+export const DocumentUploadStep: React.FC<DocumentUploadStepProps> = ({
   entityType,
   uploadedDocuments,
   onDocumentUpload,
@@ -55,7 +54,7 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
   const completedCount = requiredDocuments.filter(docName => 
     uploadedDocNames.some(uploaded => uploaded.includes(docName.toLowerCase()))
   ).length;
-  const completionPercentage = Math.round((completedCount / requiredDocuments.length) * 100);
+  const completionPercentage = requiredDocuments.length > 0 ? Math.round((completedCount / requiredDocuments.length) * 100) : 0;
 
   // Categorize documents
   const documentCategories = {
@@ -435,4 +434,6 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
       )}
     </div>
   );
-}; 
+};
+
+export default DocumentUploadStep; 
