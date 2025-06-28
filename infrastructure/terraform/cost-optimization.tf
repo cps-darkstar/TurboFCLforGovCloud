@@ -1,16 +1,3 @@
-terraform {
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 4.0"
-    }
-  }
-}
-
-provider "aws" {
-  region = var.aws_region
-}
-
 # Ensure the referenced SageMaker endpoint resource exists
 resource "aws_s3_bucket" "documents" {
   bucket = "${var.project_name}-documents"

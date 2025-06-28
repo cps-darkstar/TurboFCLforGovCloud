@@ -150,7 +150,7 @@ module "s3_buckets" {
 
 # Cognito User Pool
 module "cognito" {
-  source = "./modules/cognito"
+  source = "terraform-aws-modules/cognito-user-pool/aws"
   
   project_name = var.project_name
   environment  = var.environment
