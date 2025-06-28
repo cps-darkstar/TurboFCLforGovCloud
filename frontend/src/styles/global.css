@@ -1,0 +1,26 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold text-primary-text;
+  }
+  body {
+    @apply bg-primary-bg text-primary-text;
+  }
+}
+
+@layer components {
+  .card-common {
+    @apply bg-secondary-bg shadow-card rounded-xl p-6;
+  }
+
+  .btn-3d {
+    @apply shadow-button transition-all hover:-translate-y-0.5 hover:shadow-lg;
+  }
+
+  .form-input {
+    @apply shadow-input rounded-md border-primary-border focus:ring-accent-border focus:border-accent-border;
+  }
+}

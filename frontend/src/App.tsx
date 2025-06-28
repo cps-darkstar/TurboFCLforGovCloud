@@ -1,19 +1,18 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from 'react-query';
-import { AuthProvider } from './contexts/AuthContext';
-import { ApplicationProvider } from './contexts/ApplicationContext';
 import { Toaster } from 'react-hot-toast';
+import { QueryClient, QueryClientProvider } from 'react-query';
+import { Navigate, Route, BrowserRouter as Router, Routes } from 'react-router-dom';
+import { ApplicationProvider } from './contexts/ApplicationContext';
+import { AuthProvider } from './contexts/AuthContext';
 
 // Pages
-import LoginPage from './pages/LoginPage';
-import DashboardPage from './pages/DashboardPage';
-import ApplicationPage from './pages/ApplicationPage';
-import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout';
+import ProtectedRoute from './components/ProtectedRoute';
+import ApplicationPage from './pages/ApplicationPage';
+import DashboardPage from './pages/DashboardPage';
+import LoginPage from './pages/LoginPage';
 
 // Styles
-import './App.css';
+import './styles/global.css';
 
 // Create React Query client
 const queryClient = new QueryClient({
