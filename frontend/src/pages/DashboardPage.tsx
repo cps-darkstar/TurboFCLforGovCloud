@@ -1,6 +1,7 @@
-import { AlertTriangle, CheckCircle, Clock, FileText, Plus } from 'lucide-react';
+import { AlertTriangle, Building, CheckCircle, Clock, FileText, Plus } from 'lucide-react';
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import BusinessStructureExplorer from '../components/BusinessStructureExplorer';
 import { useAuth } from '../contexts/AuthContext';
 
 const DashboardPage: React.FC = () => {
@@ -108,6 +109,30 @@ const DashboardPage: React.FC = () => {
               </div>
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* Business Structure Explorer Section */}
+      <div className="mt-8">
+        <div className="card">
+          <div className="px-6 py-4 border-b border-border-subtle">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="h2-typography">Business Structure Explorer</h2>
+                <p className="p-typography">Explore defense contractor entity structures and FOCI assessments</p>
+              </div>
+              <button
+                onClick={() => navigate('/business-explorer')}
+                className="button-primary"
+              >
+                <Building className="h-4 w-4" />
+                Explore Structures
+              </button>
+            </div>
+          </div>
+          <div className="p-6">
+            <BusinessStructureExplorer />
+          </div>
         </div>
       </div>
     </div>

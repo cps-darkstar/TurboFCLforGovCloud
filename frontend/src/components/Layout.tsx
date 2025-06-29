@@ -1,5 +1,6 @@
-import { LogOut, Shield, User } from 'lucide-react';
+import { Building, FileText, Home, LogOut, Shield, User } from 'lucide-react';
 import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 interface LayoutProps {
@@ -8,6 +9,13 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { user, logout } = useAuth();
+  const location = useLocation();
+
+  const navLinks = [
+    { path: '/dashboard', label: 'Dashboard', icon: Home },
+    { path: '/application', label: 'Application', icon: FileText },
+    { path: '/business-explorer', label: 'Business Explorer', icon: Building },
+  ];
 
   return (
     <div className="min-h-screen bg-primary-bg">
@@ -21,6 +29,28 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 <p className="text-xs text-secondary-text">AI-Powered FCL Assistant</p>
               </div>
             </div>
+
+            {/* Navigation */}
+            <nav className="hidden md:flex items-center space-x-6">
+              {navLinks.map((link) => {
+                const Icon = link.icon;
+                const isActive = location.pathname === link.path;
+                return (
+                  <Link
+                    key={link.path}
+                    to={link.path}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                      isActive
+                        ? 'bg-accent-bg text-accent-text'
+                        : 'text-secondary-text hover:text-primary-text hover:bg-primary-bg'
+                    }`}
+                  >
+                    <Icon className="h-4 w-4" />
+                    {link.label}
+                  </Link>
+                );
+              })}
+            </nav>
             
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2 text-sm text-primary-text">

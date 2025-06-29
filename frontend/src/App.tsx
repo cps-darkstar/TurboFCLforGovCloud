@@ -5,6 +5,7 @@ import { ApplicationProvider } from './contexts/ApplicationContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 // Pages
+import BusinessStructureExplorer from './components/BusinessStructureExplorer';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
 import ApplicationPage from './pages/ApplicationPage';
@@ -63,6 +64,22 @@ function App() {
                   <ProtectedRoute>
                     <Layout>
                       <ApplicationPage />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
+                
+                <Route path="/business-explorer" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <div className="container mx-auto px-4 py-8">
+                        <div className="mb-8">
+                          <h1 className="h1-typography">Business Structure Explorer</h1>
+                          <p className="p-typography">
+                            Explore defense contractor entity structures and FOCI assessments
+                          </p>
+                        </div>
+                        <BusinessStructureExplorer />
+                      </div>
                     </Layout>
                   </ProtectedRoute>
                 } />
