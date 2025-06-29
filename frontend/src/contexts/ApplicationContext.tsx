@@ -10,6 +10,8 @@ interface ApplicationContextType {
   setCurrentStep: (step: number) => void;
   isValidating: boolean;
   setIsValidating: (validating: boolean) => void;
+  processingStatus: 'idle' | 'fetching' | 'validating' | 'complete' | 'error';
+  setProcessingStatus: (status: 'idle' | 'fetching' | 'validating' | 'complete' | 'error') => void;
 }
 
 const ApplicationContext = createContext<ApplicationContextType | undefined>(undefined);
@@ -49,6 +51,7 @@ export const ApplicationProvider: React.FC<ApplicationProviderProps> = ({ childr
   const [applicationData, setApplicationData] = useState<ApplicationData>(initialApplicationData);
   const [currentStep, setCurrentStep] = useState(0);
   const [isValidating, setIsValidating] = useState(false);
+  const [processingStatus, setProcessingStatus] = useState<'idle' | 'fetching' | 'validating' | 'complete' | 'error'>('idle');
 
   const updateApplicationData = (data: Partial<ApplicationData>) => {
     setApplicationData(prev => ({
@@ -61,6 +64,7 @@ export const ApplicationProvider: React.FC<ApplicationProviderProps> = ({ childr
     setApplicationData(initialApplicationData);
     setCurrentStep(0);
     setIsValidating(false);
+    setProcessingStatus('idle');
   };
 
   const value: ApplicationContextType = {
@@ -70,7 +74,9 @@ export const ApplicationProvider: React.FC<ApplicationProviderProps> = ({ childr
     currentStep,
     setCurrentStep,
     isValidating,
-    setIsValidating
+    setIsValidating,
+    processingStatus,
+    setProcessingStatus
   };
 
   return (

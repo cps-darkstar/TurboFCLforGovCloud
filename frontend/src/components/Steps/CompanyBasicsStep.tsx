@@ -1,15 +1,47 @@
 import { CheckCircle, Loader2 } from 'lucide-react';
-import React from 'react';
-import { useApplicationData } from '../../hooks/useApplicationData';
+import React, { useState } from 'react';
+import { useApplication } from '../../contexts/ApplicationContext';
+import { turboFCLService } from '../../services/turboFCLService';
 
 export const CompanyBasicsStep = () => {
-  const { applicationData, updateApplicationData, processingStatus } = useApplicationData();
+  const { applicationData, updateApplicationData, processingStatus, setProcessingStatus } = useApplication();
+  const [lookupError, setLookupError] = useState<string>('');
 
   const handleUeiChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     // Basic validation to allow only alphanumeric characters
     const value = e.target.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
-    updateApplicationData('uei', value);
+    updateApplicationData({ uei: value });
+    // Clear any previous error when user starts typing
+    if (lookupError) setLookupError('');
   };
+
+  const handleLookupCompany = async () => {
+    if (!applicationData.uei || applicationData.uei.length !== 12) {
+      setLookupError('Please enter a valid 12-character UEI');
+      return;
+    }
+
+    try {
+      setProcessingStatus('fetching');
+      setLookupError('');
+      
+      const samData = await turboFCLService.getSAMData(applicationData.uei);
+      
+      updateApplicationData({
+        companyName: samData.legalBusinessName,
+        cageCode: samData.cageCode,
+        samData: samData
+      });
+      
+      setProcessingStatus('complete');
+    } catch (error) {
+      setLookupError('Unable to fetch company data. Please verify your UEI and try again.');
+      setProcessingStatus('error');
+    }
+  };
+
+  const isUeiValid = applicationData.uei.length === 12;
+  const hasCompanyData = applicationData.companyName && applicationData.cageCode;
 
   return (
     <div className="max-w-2xl mx-auto">

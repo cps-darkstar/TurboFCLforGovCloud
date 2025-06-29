@@ -1,6 +1,14 @@
 import { CheckCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+import React from 'react';
 
-export const Navigation = ({ onNext, onBack, isFirstStep, isLastStep }) => {
+interface NavigationProps {
+  onNext: () => void;
+  onBack: () => void;
+  isFirstStep: boolean;
+  isLastStep: boolean;
+}
+
+export const Navigation: React.FC<NavigationProps> = ({ onNext, onBack, isFirstStep, isLastStep }) => {
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 pb-8">
       <div className="flex justify-between">

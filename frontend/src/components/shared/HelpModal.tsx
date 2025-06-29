@@ -1,6 +1,12 @@
 import { HelpCircle, X } from 'lucide-react';
+import React from 'react';
 
-export const HelpModal = ({ content, onClose }) => {
+interface HelpModalProps {
+  content: string;
+  onClose: () => void;
+}
+
+export const HelpModal: React.FC<HelpModalProps> = ({ content, onClose }) => {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50 animate-fade-in">
       <div className="bg-background-primary rounded-lg max-w-lg w-full p-6 relative">

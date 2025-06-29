@@ -1,5 +1,12 @@
 // TurboFCL Application Types
 
+export interface FCLApplication {
+  companyName: string;
+  uei: string;
+  cageCode: string;
+  entityType: string | null;
+}
+
 export interface ApplicationData {
   companyName: string;
   uei: string;

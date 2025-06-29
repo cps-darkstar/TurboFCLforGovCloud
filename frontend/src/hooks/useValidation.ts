@@ -3,15 +3,15 @@
  * Implements all validation logic from extracted knowledge
  */
 
-import { useState, useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
-  VALIDATION_PATTERNS,
-  ERROR_MESSAGES,
-  ENTITY_REQUIREMENTS,
-  SAM_TO_ENTITY_MAP,
-  FOCI_CONDITIONS,
-  FOCI_THRESHOLDS,
-  EntityType
+    ENTITY_REQUIREMENTS,
+    EntityType,
+    ERROR_MESSAGES,
+    FOCI_CONDITIONS,
+    FOCI_THRESHOLDS,
+    SAM_TO_ENTITY_MAP,
+    VALIDATION_PATTERNS
 } from '../constants/businessRules';
 import { ApplicationData, ValidationIssue } from '../types/turbofcl';
 
@@ -198,7 +198,7 @@ export const validateDocument = (file: File): ValidationResult => {
 
   // Check file type
   const fileExtension = file.name.split('.').pop()?.toLowerCase() || '';
-  if (!VALIDATION_PATTERNS.ALLOWED_DOCUMENT_TYPES.includes(fileExtension)) {
+  if (!VALIDATION_PATTERNS.ALLOWED_DOCUMENT_TYPES.includes(fileExtension as 'pdf' | 'doc' | 'docx')) {
     errors.push({
       type: 'error',
       field: 'document',

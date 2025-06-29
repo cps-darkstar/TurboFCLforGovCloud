@@ -7,7 +7,7 @@ const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 const detectBackendPort = async () => {
   for (let port = 8000; port <= 8009; port++) {
     try {
-      const response = await fetch(`http://localhost:${port}/health`, { 
+      const response = await fetch(`http://localhost:${port}/`, { 
         method: 'GET',
         signal: AbortSignal.timeout(1000)
       });

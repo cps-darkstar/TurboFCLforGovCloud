@@ -1,6 +1,11 @@
 import { Bot, MessageSquare, X } from 'lucide-react';
+import React from 'react';
 
-export const AIChat = ({ onClose }) => {
+interface AIChatProps {
+  onClose: () => void;
+}
+
+export const AIChat: React.FC<AIChatProps> = ({ onClose }) => {
   // We will add state and logic for chat messages later
   return (
     <div className="fixed bottom-4 right-4 w-96 h-[500px] bg-background-primary rounded-lg shadow-2xl border border-border-subtle flex flex-col z-50 animate-fade-in-up">

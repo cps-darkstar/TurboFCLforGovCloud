@@ -1,6 +1,11 @@
 import { Bot, Database, Shield } from 'lucide-react';
+import React from 'react';
 
-export const Header = ({ onHelpClick }) => {
+interface HeaderProps {
+  onHelpClick: () => void;
+}
+
+export const Header: React.FC<HeaderProps> = ({ onHelpClick }) => {
   return (
     <header className="bg-background-primary shadow-sm border-b border-border-subtle sticky top-0 z-20">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">

@@ -1,4 +1,4 @@
-import { useApplicationData } from '../../hooks/useApplicationData';
+import { useApplication } from '../../contexts/ApplicationContext';
 
 const options = [
   { id: 'llc', title: 'Limited Liability Company (LLC)', description: 'A flexible business structure combining aspects of corporations and partnerships.' },
@@ -8,7 +8,7 @@ const options = [
 ];
 
 export const EntityTypeStep = () => {
-  const { applicationData, updateApplicationData } = useApplicationData();
+  const { applicationData, updateApplicationData } = useApplication();
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -35,7 +35,7 @@ export const EntityTypeStep = () => {
                   name="entityType"
                   type="radio"
                   checked={applicationData.entityType === option.id}
-                  onChange={() => updateApplicationData('entityType', option.id)}
+                  onChange={() => updateApplicationData({ entityType: option.id })}
                   className="focus:ring-accent-border h-4 w-4 text-accent-text border-primary-border"
                 />
               </div>

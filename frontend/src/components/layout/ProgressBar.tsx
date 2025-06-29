@@ -1,5 +1,13 @@
 
-export const ProgressBar = ({ currentStep, totalSteps, title }) => {
+import React from 'react';
+
+interface ProgressBarProps {
+  currentStep: number;
+  totalSteps: number;
+  title: string;
+}
+
+export const ProgressBar: React.FC<ProgressBarProps> = ({ currentStep, totalSteps, title }) => {
   const progressPercentage = ((currentStep + 1) / totalSteps) * 100;
 
   return (
