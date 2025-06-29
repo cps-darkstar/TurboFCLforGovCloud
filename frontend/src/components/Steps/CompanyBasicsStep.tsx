@@ -1,7 +1,8 @@
-import { CheckCircle, Loader2 } from 'lucide-react';
+import { CheckCircle, Loader2, Search } from 'lucide-react';
 import React, { useState } from 'react';
 import { useApplication } from '../../contexts/ApplicationContext';
 import { turboFCLService } from '../../services/turboFCLService';
+import { Button } from '../ui/Button';
 
 export const CompanyBasicsStep = () => {
   const { applicationData, updateApplicationData, processingStatus, setProcessingStatus } = useApplication();
@@ -54,56 +55,90 @@ export const CompanyBasicsStep = () => {
         {/* UEI Input */}
         <div className="relative">
           <label htmlFor="uei" className="block text-sm font-medium text-secondary-text">
-            Unique Entity ID (UEI)
+            Unique Entity ID (UEI) *
           </label>
-          <input
-            type="text"
-            id="uei"
-            value={applicationData.uei}
-            onChange={handleUeiChange}
-            maxLength={12}
-            className="form-input mt-1 block w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 sm:text-sm"
-            placeholder="Enter 12-character UEI"
-          />
-          {processingStatus === 'fetching' && (
-            <div className="absolute inset-y-0 right-0 top-6 pr-3 flex items-center pointer-events-none">
-              <Loader2 className="h-5 w-5 text-gray-400 animate-spin" />
-            </div>
+          <div className="mt-1 flex rounded-md shadow-sm">
+            <input
+              type="text"
+              id="uei"
+              value={applicationData.uei}
+              onChange={handleUeiChange}
+              maxLength={12}
+              className="form-input block w-full px-3 py-2 border rounded-l-md shadow-sm placeholder-gray-400 sm:text-sm"
+              placeholder="Enter 12-character UEI"
+            />
+            <Button
+              onClick={handleLookupCompany}
+              disabled={!isUeiValid || processingStatus === 'fetching'}
+              className="rounded-l-none"
+              variant="primary"
+            >
+              {processingStatus === 'fetching' ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Search className="h-4 w-4" />
+              )}
+              <span className="ml-2">Lookup</span>
+            </Button>
+          </div>
+          {lookupError && (
+            <p className="mt-1 text-sm text-red-600">{lookupError}</p>
           )}
-           {processingStatus === 'complete' && applicationData.companyName && (
-            <div className="absolute inset-y-0 right-0 top-6 pr-3 flex items-center pointer-events-none">
-              <CheckCircle className="h-5 w-5 text-green-500" />
-            </div>
+          {processingStatus === 'complete' && hasCompanyData && (
+            <p className="mt-1 text-sm text-green-600 flex items-center">
+              <CheckCircle className="h-4 w-4 mr-1" />
+              Company data retrieved successfully
+            </p>
           )}
         </div>
 
         {/* Auto-filled Company Name */}
-        <div>
-          <label htmlFor="companyName" className="block text-sm font-medium text-secondary-text">
-            Legal Business Name
-          </label>
-          <input
-            type="text"
-            id="companyName"
-            value={applicationData.companyName}
-            readOnly
-            className="form-input mt-1 block w-full px-3 py-2 bg-accent-bg border rounded-md shadow-sm sm:text-sm"
-          />
-        </div>
+        {hasCompanyData && (
+          <div>
+            <label htmlFor="companyName" className="block text-sm font-medium text-secondary-text">
+              Legal Business Name
+            </label>
+            <input
+              type="text"
+              id="companyName"
+              value={applicationData.companyName}
+              readOnly
+              className="form-input mt-1 block w-full px-3 py-2 bg-gray-50 border rounded-md shadow-sm sm:text-sm"
+            />
+          </div>
+        )}
         
         {/* Auto-filled CAGE Code */}
-        <div>
-          <label htmlFor="cageCode" className="block text-sm font-medium text-secondary-text">
-            CAGE Code
-          </label>
-          <input
-            type="text"
-            id="cageCode"
-            value={applicationData.cageCode}
-            readOnly
-            className="form-input mt-1 block w-full px-3 py-2 bg-accent-bg border rounded-md shadow-sm sm:text-sm"
-          />
-        </div>
+        {hasCompanyData && (
+          <div>
+            <label htmlFor="cageCode" className="block text-sm font-medium text-secondary-text">
+              CAGE Code
+            </label>
+            <input
+              type="text"
+              id="cageCode"
+              value={applicationData.cageCode}
+              readOnly
+              className="form-input mt-1 block w-full px-3 py-2 bg-gray-50 border rounded-md shadow-sm sm:text-sm"
+            />
+          </div>
+        )}
+
+        {hasCompanyData && (
+          <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-md">
+            <div className="flex">
+              <CheckCircle className="h-5 w-5 text-green-400 mt-0.5" />
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-green-800">
+                  Company Information Retrieved
+                </h3>
+                <p className="mt-1 text-sm text-green-700">
+                  Your company data has been successfully retrieved from SAM.gov. You can now proceed to the next step.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
