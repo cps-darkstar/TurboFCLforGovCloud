@@ -1,7 +1,7 @@
 import { Eye, EyeOff, Shield } from 'lucide-react';
 import React, { useState } from 'react';
 import toast from 'react-hot-toast';
-import { Navigate } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 const LoginPage: React.FC = () => {
@@ -104,6 +104,12 @@ const LoginPage: React.FC = () => {
               </button>
             </div>
           </form>
+
+          <div className="text-sm text-center mt-4">
+            <Link to="/" className="font-medium text-indigo-600 hover:text-indigo-500">
+              &larr; Back to Home
+            </Link>
+          </div>
         </div>
       </div>
     </div>

@@ -2,7 +2,7 @@ import { Toaster } from 'react-hot-toast';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { Navigate, Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 import { ApplicationProvider } from './contexts/ApplicationContext';
-import { AuthProvider } from './contexts/AuthContext';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 // Pages
 import Layout from './components/Layout';
@@ -10,6 +10,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import ApplicationPage from './pages/ApplicationPage';
 import DashboardPage from './pages/DashboardPage';
 import LoginPage from './pages/LoginPage';
+import SplashPage from './pages/SplashPage';
 
 // Styles
 import './styles/global.css';
@@ -25,6 +26,17 @@ const queryClient = new QueryClient({
   },
 });
 
+// A component to handle root navigation
+const RootNavigator = () => {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return <div>Loading...</div>; // Or a proper spinner component
+  }
+
+  return isAuthenticated ? <Navigate to="/dashboard" /> : <SplashPage />;
+};
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
@@ -37,13 +49,7 @@ function App() {
                 <Route path="/login" element={<LoginPage />} />
                 
                 {/* Protected routes */}
-                <Route path="/" element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <Navigate to="/dashboard" replace />
-                    </Layout>
-                  </ProtectedRoute>
-                } />
+                <Route path="/" element={<RootNavigator />} />
                 
                 <Route path="/dashboard" element={
                   <ProtectedRoute>
@@ -53,7 +59,7 @@ function App() {
                   </ProtectedRoute>
                 } />
                 
-                <Route path="/application/:id?" element={
+                <Route path="/application" element={
                   <ProtectedRoute>
                     <Layout>
                       <ApplicationPage />
@@ -62,7 +68,7 @@ function App() {
                 } />
                 
                 {/* Catch all route */}
-                <Route path="*" element={<Navigate to="/dashboard" replace />} />
+                <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
               
               {/* Toast notifications */}
