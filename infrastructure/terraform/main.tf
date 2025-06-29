@@ -511,40 +511,78 @@ resource "aws_ecs_task_definition" "backend" {
   family                   = "${var.project_name}-backend"
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
-  cpu                      = "512"
-  memory                   = "1024"
+  cpu                      = "1024"
+  memory                   = "2048"
   execution_role_arn       = aws_iam_role.ecs_task_execution.arn
   task_role_arn            = aws_iam_role.ecs_task.arn
 
-  container_definitions = jsonencode([{
-    name  = "backend"
-    image = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${var.aws_region}.amazonaws.com/${var.project_name}-backend:latest"
-    
-    portMappings = [{
-      containerPort = 8000
-      protocol      = "tcp"
-    }]
-    
-    environment = [
-      { name = "ENVIRONMENT", value = var.environment },
-      { name = "AWS_REGION", value = var.aws_region }
-    ]
-    
-    secrets = [
-      { name = "DATABASE_URL", valueFrom = aws_secretsmanager_secret.db_connection.arn },
-      { name = "COGNITO_USER_POOL_ID", valueFrom = aws_ssm_parameter.cognito_user_pool_id.arn },
-      { name = "SECRET_KEY", valueFrom = aws_secretsmanager_secret.app_secret_key.arn }
-    ]
-    
-    logConfiguration = {
-      logDriver = "awslogs"
-      options = {
-        "awslogs-group"         = aws_cloudwatch_log_group.ecs_logs.name
-        "awslogs-region"        = var.aws_region
-        "awslogs-stream-prefix" = "backend"
+  container_definitions = jsonencode([
+    {
+      name      = "backend"
+      image     = "${aws_ecr_repository.backend.repository_url}:latest"
+      cpu       = 1024
+      memory    = 2048
+      essential = true
+      portMappings = [
+        {
+          containerPort = 8000
+          hostPort      = 8000
+        }
+      ]
+      secrets = [
+        {
+          name      = "DATABASE_URL"
+          valueFrom = aws_secretsmanager_secret.db_connection.arn
+        },
+        {
+          name      = "SECRET_KEY"
+          valueFrom = aws_secretsmanager_secret.app_secret_key.arn
+        },
+        {
+          name      = "SAM_GOV_API_KEY"
+          valueFrom = aws_secretsmanager_secret.sam_gov_api_key.arn
+        },
+        {
+          name      = "REDIS_URL"
+          valueFrom = aws_secretsmanager_secret.redis_connection_url.arn
+        }
+      ]
+      environment = [
+        {
+          name  = "COGNITO_USER_POOL_ID"
+          value = aws_cognito_user_pool.main.id
+        },
+        {
+          name  = "COGNITO_CLIENT_ID"
+          value = aws_cognito_user_pool_client.main.id
+        },
+        {
+          name  = "S3_DOCUMENTS_BUCKET"
+          value = aws_s3_bucket.documents.bucket
+        },
+        {
+          name  = "SAGEMAKER_GPT_ENDPOINT"
+          value = var.sagemaker_gpt_endpoint_name
+        },
+        {
+          name  = "SAGEMAKER_EMBEDDING_ENDPOINT"
+          value = var.sagemaker_embedding_endpoint_name
+        },
+        {
+          name  = "SAGEMAKER_NER_ENDPOINT"
+          value = var.sagemaker_ner_endpoint_name
+        }
+      ]
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          "awslogs-group"         = aws_cloudwatch_log_group.ecs_logs.name
+          "awslogs-region"        = var.aws_region
+          "awslogs-stream-prefix" = "backend"
+        }
       }
     }
-  }])
+  ])
 }
 
 # ECS Service for Backend
@@ -849,10 +887,8 @@ resource "aws_secretsmanager_secret" "db_connection" {
 }
 
 resource "aws_secretsmanager_secret_version" "db_connection" {
-  secret_id = aws_secretsmanager_secret.db_connection.id
-  secret_string = jsonencode({
-    connection_string = "postgresql://turbofcladmin:${random_password.db_password.result}@${module.database.db_instance_endpoint}/turbofcldb"
-  })
+  secret_id     = aws_secretsmanager_secret.db_connection.id
+  secret_string = "postgresql://${module.database.db_instance_username}:${random_password.db_password.result}@${module.database.db_instance_address}/${module.database.db_instance_name}"
 }
 
 resource "random_password" "db_password" {
@@ -916,9 +952,14 @@ resource "random_password" "app_secret_key" {
 }
 
 resource "aws_secretsmanager_secret" "sam_gov_api_key" {
-  name        = "${var.project_name}-sam-gov-api"
+  name        = "${var.project_name}-sam-gov-api-key"
   description = "SAM.gov API key"
   kms_key_id  = aws_kms_key.turbofcl.id
+}
+
+resource "aws_secretsmanager_secret_version" "sam_gov_api_key" {
+  secret_id     = aws_secretsmanager_secret.sam_gov_api_key.id
+  secret_string = var.sam_gov_api_key
 }
 
 # SageMaker Endpoints (deployed separately)
@@ -957,59 +998,45 @@ resource "aws_elasticache_parameter_group" "redis" {
 }
 
 resource "aws_elasticache_replication_group" "redis" {
-  count = var.enable_redis ? 1 : 0
-  
-  replication_group_id       = "${var.project_name}-redis"
-  description                = "Redis cache for TurboFCL"
-  node_type                  = var.redis_node_type
-  parameter_group_name       = aws_elasticache_parameter_group.redis[0].name
-  port                       = 6379
-  subnet_group_name          = aws_elasticache_subnet_group.redis[0].name
-  security_group_ids         = [module.security_groups.security_group_id]
-  
-  # Encryption
-  at_rest_encryption_enabled = true
-  transit_encryption_enabled = true
-  auth_token                 = random_password.redis_auth_token[0].result
-  kms_key_id                 = aws_kms_key.turbofcl.arn
-  
-  # High availability
-  automatic_failover_enabled = var.environment == "production"
-  num_cache_clusters         = var.environment == "production" ? 2 : 1
-  
-  # Backup
-  snapshot_retention_limit   = var.environment == "production" ? 7 : 1
-  snapshot_window            = "03:00-05:00"
-  
-  tags = {
-    Name = "${var.project_name}-redis"
-  }
+  replication_group_id          = "${var.project_name}-redis"
+  description                   = "Redis cluster for TurboFCL"
+  node_type                     = var.redis_node_type
+  number_cache_clusters         = var.redis_num_nodes
+  parameter_group_name          = aws_elasticache_parameter_group.redis[0].name
+  subnet_group_name             = aws_elasticache_subnet_group.redis[0].name
+  security_group_ids            = [module.security_groups.redis_sg_id]
+  automatic_failover_enabled    = true
+  at_rest_encryption_enabled    = true
+  transit_encryption_enabled    = true
+  auth_token                    = random_password.redis_auth_token.result
+  port                          = 6379
+  apply_immediately             = true
+  tags                          = var.tags
 }
 
 resource "random_password" "redis_auth_token" {
-  count = var.enable_redis ? 1 : 0
-  
   length  = 32
-  special = true
-  override_special = "!&#$^<>-"
+  special = false
 }
 
 resource "aws_secretsmanager_secret" "redis_auth_token" {
-  count = var.enable_redis ? 1 : 0
-  
-  name        = "${var.project_name}-redis-auth-token"
-  description = "Redis authentication token"
-  kms_key_id  = aws_kms_key.turbofcl.id
+  name = "${var.project_name}-redis-auth-token"
+  tags = var.tags
 }
 
 resource "aws_secretsmanager_secret_version" "redis_auth_token" {
-  count = var.enable_redis ? 1 : 0
-  
-  secret_id = aws_secretsmanager_secret.redis_auth_token[0].id
-  secret_string = jsonencode({
-    auth_token = random_password.redis_auth_token[0].result
-    endpoint   = aws_elasticache_replication_group.redis[0].configuration_endpoint_address
-  })
+  secret_id     = aws_secretsmanager_secret.redis_auth_token.id
+  secret_string = random_password.redis_auth_token.result
+}
+
+resource "aws_secretsmanager_secret" "redis_connection_url" {
+  name = "${var.project_name}-redis-connection-url"
+  tags = var.tags
+}
+
+resource "aws_secretsmanager_secret_version" "redis_connection_url" {
+  secret_id     = aws_secretsmanager_secret.redis_connection_url.id
+  secret_string = "redis://:${random_password.redis_auth_token.result}@${aws_elasticache_replication_group.redis.primary_endpoint_address}:6379"
 }
 
 # CloudWatch Alarms

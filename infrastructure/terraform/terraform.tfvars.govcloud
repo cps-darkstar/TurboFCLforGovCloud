@@ -54,4 +54,6 @@ tags = {
   CostCenter      = "DCSA-FCL"
   Owner           = "FCL-Team"
   BackupSchedule  = "Daily"
-} 
+}
+
+sam_gov_api_key = "YOUR_KEY_HERE" 

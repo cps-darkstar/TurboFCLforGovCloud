@@ -27,3 +27,5 @@ tags = {
   Environment = "Staging"
   DataClassification = "Test"
 }
+
+sam_gov_api_key = "YOUR_KEY_HERE"

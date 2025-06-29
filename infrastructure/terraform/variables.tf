@@ -114,11 +114,31 @@ variable "alert_email" {
 }
 
 variable "tags" {
-  description = "Common tags for all resources"
+  description = "A map of tags to assign to resources."
   type        = map(string)
-  default = {
-    Project     = "TurboFCL"
-    ManagedBy   = "Terraform"
-    Compliance  = "FedRAMP-High"
-  }
+  default     = {}
+}
+
+variable "sam_gov_api_key" {
+  description = "API key for SAM.gov integration."
+  type        = string
+  sensitive   = true
+}
+
+variable "sagemaker_gpt_endpoint_name" {
+  description = "Name of the SageMaker endpoint for the GPT model."
+  type        = string
+  default     = "turbofcl-gpt-endpoint"
+}
+
+variable "sagemaker_embedding_endpoint_name" {
+  description = "Name of the SageMaker endpoint for the embedding model."
+  type        = string
+  default     = "turbofcl-embedding-endpoint"
+}
+
+variable "sagemaker_ner_endpoint_name" {
+  description = "Name of the SageMaker endpoint for the NER model."
+  type        = string
+  default     = "turbofcl-ner-endpoint"
 }
