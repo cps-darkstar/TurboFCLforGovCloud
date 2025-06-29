@@ -1,5 +1,8 @@
 import { CheckCircle, ShieldCheck, Zap } from 'lucide-react';
 import React from 'react';
+import { Link } from 'react-router-dom';
+import { Button } from '../components/ui/Button';
+import { Card, CardHeader, CardTitle } from '../components/ui/Card';
 
 const proofPoints = [
   {
