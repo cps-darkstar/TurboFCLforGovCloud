@@ -8,3 +8,31 @@ black==23.11.0
 isort==5.12.0
 pydantic-settings==2.1.0
 python-dotenv==1.0.0
+
+# Enterprise Backend Dependencies
+sqlalchemy[asyncio]==2.0.23
+asyncpg==0.29.0
+alembic==1.13.1
+psycopg2-binary==2.9.9
+
+# Authentication & Security
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-multipart==0.0.6
+cryptography==41.0.8
+
+# AWS Services
+boto3==1.34.0
+botocore==1.34.0
+
+# Utilities
+python-dateutil==2.8.2
+email-validator==2.1.0
+phonenumbers==8.13.25
+validators==0.22.0
+
+# Development & Testing
+pytest-asyncio==0.21.1
+pytest-mock==3.12.0
+factory-boy==3.3.0
+faker==20.1.0
