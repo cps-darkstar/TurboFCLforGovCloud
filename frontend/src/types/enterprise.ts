@@ -3,6 +3,257 @@
  * Comprehensive type safety for government contracting compliance
  */
 
+// NAICS and SBA Category Types
+export interface NAICSCode {
+  readonly code: string;
+  readonly title: string;
+  readonly description?: string;
+  readonly size_standards?: string;
+  readonly exceptions?: string;
+}
+
+export interface SBACategory {
+  readonly category: SBACategoryType;
+  readonly naicsCode: string;
+  readonly employeeThreshold?: number;
+  readonly revenueThreshold?: number;
+  readonly certified: boolean;
+  readonly certificationDate?: string;
+  readonly expirationDate?: string;
+}
+
+export enum SBACategoryType {
+  SMALL_BUSINESS = 'SMALL_BUSINESS',
+  LARGE_BUSINESS = 'LARGE_BUSINESS',
+  WOMAN_OWNED = 'WOMAN_OWNED',
+  MINORITY_OWNED = 'MINORITY_OWNED',
+  VETERAN_OWNED = 'VETERAN_OWNED',
+  SERVICE_DISABLED_VETERAN = 'SERVICE_DISABLED_VETERAN',
+  HUBZONE = 'HUBZONE',
+  EIGHT_A = '8A',
+  ECONOMICALLY_DISADVANTAGED = 'ECONOMICALLY_DISADVANTAGED',
+  HISTORICALLY_BLACK_COLLEGE = 'HBCU',
+  ALASKA_NATIVE_CORPORATION = 'ANC',
+  INDIAN_TRIBAL_GOVERNMENT = 'INDIAN_TRIBAL'
+}
+
+// Clearance and Compliance Types
+export interface ClearanceRequirement {
+  readonly level: ClearanceLevel;
+  readonly classification: ClassificationLevel;
+  readonly required: boolean;
+  readonly personnelCount?: number;
+  readonly facilityRequirement?: boolean;
+  readonly description?: string;
+}
+
+export interface ComplianceStatus {
+  readonly overall: ValidationStatus;
+  readonly foci: FOCIRiskLevel;
+  readonly security: ValidationStatus;
+  readonly financial: ValidationStatus;
+  readonly lastUpdated: string;
+  readonly nextReview?: string;
+  readonly violations?: ComplianceViolation[];
+}
+
+export interface ComplianceViolation {
+  readonly id: string;
+  readonly type: string;
+  readonly severity: ValidationSeverity;
+  readonly description: string;
+  readonly discoveredDate: string;
+  readonly status: string;
+  readonly remediation?: string;
+}
+
+// Assessment and Mitigation Types
+export interface MitigationMeasure {
+  readonly id: string;
+  readonly type: string;
+  readonly description: string;
+  readonly implementation: string;
+  readonly effectiveness: EffectivenessRating;
+  readonly cost?: number;
+  readonly timeline?: string;
+  readonly responsible?: string;
+  readonly status: ImplementationStatus;
+}
+
+export enum EffectivenessRating {
+  LOW = 'LOW',
+  MEDIUM = 'MEDIUM',
+  HIGH = 'HIGH',
+  CRITICAL = 'CRITICAL'
+}
+
+export enum ImplementationStatus {
+  PLANNED = 'PLANNED',
+  IN_PROGRESS = 'IN_PROGRESS',
+  IMPLEMENTED = 'IMPLEMENTED',
+  VERIFIED = 'VERIFIED',
+  FAILED = 'FAILED'
+}
+
+export interface ComplianceGap {
+  readonly id: string;
+  readonly requirement: string;
+  readonly current: string;
+  readonly gap: string;
+  readonly severity: ValidationSeverity;
+  readonly priority: number;
+  readonly remediation?: string;
+}
+
+export interface Recommendation {
+  readonly id: string;
+  readonly category: string;
+  readonly title: string;
+  readonly description: string;
+  readonly priority: number;
+  readonly effort: string;
+  readonly impact: string;
+  readonly timeline?: string;
+}
+
+export interface AssessmentMetadata {
+  readonly version: string;
+  readonly assessor: string;
+  readonly methodology: string;
+  readonly standards: string[];
+  readonly tools: string[];
+  readonly limitations?: string[];
+}
+
+// Ownership and Corporate Structure Types
+export interface ShareClass {
+  readonly class: string;
+  readonly type: ShareType;
+  readonly votingRights: boolean;
+  readonly votingRatio?: number;
+  readonly liquidationPreference?: number;
+  readonly dividendRights: boolean;
+  readonly convertible: boolean;
+  readonly outstanding: number;
+  readonly authorized: number;
+}
+
+export enum ShareType {
+  COMMON = 'COMMON',
+  PREFERRED = 'PREFERRED',
+  VOTING = 'VOTING',
+  NON_VOTING = 'NON_VOTING',
+  CONVERTIBLE = 'CONVERTIBLE',
+  PARTICIPATING = 'PARTICIPATING'
+}
+
+export interface VotingAgreement {
+  readonly id: string;
+  readonly type: VotingAgreementType;
+  readonly parties: string[];
+  readonly subject: string;
+  readonly terms: string;
+  readonly effectiveDate: string;
+  readonly expirationDate?: string;
+  readonly votingPower: number;
+}
+
+export enum VotingAgreementType {
+  POOLING = 'POOLING',
+  TRUST = 'TRUST',
+  PROXY = 'PROXY',
+  IRREVOCABLE_PROXY = 'IRREVOCABLE_PROXY',
+  MANAGEMENT = 'MANAGEMENT',
+  CONTROL = 'CONTROL'
+}
+
+export interface BoardMember {
+  readonly id: string;
+  readonly name: string;
+  readonly position: BoardPosition;
+  readonly appointedBy?: string;
+  readonly term: string;
+  readonly independent: boolean;
+  readonly citizenship: string;
+  readonly clearanceLevel?: ClearanceLevel;
+  readonly votingPower?: number;
+}
+
+export enum BoardPosition {
+  CHAIRMAN = 'CHAIRMAN',
+  VICE_CHAIRMAN = 'VICE_CHAIRMAN',
+  DIRECTOR = 'DIRECTOR',
+  INDEPENDENT_DIRECTOR = 'INDEPENDENT_DIRECTOR',
+  LEAD_DIRECTOR = 'LEAD_DIRECTOR',
+  AUDIT_COMMITTEE = 'AUDIT_COMMITTEE',
+  COMPENSATION_COMMITTEE = 'COMPENSATION_COMMITTEE',
+  NOMINATING_COMMITTEE = 'NOMINATING_COMMITTEE'
+}
+
+export interface ManagementStructure {
+  readonly ceo: string;
+  readonly cfo?: string;
+  readonly coo?: string;
+  readonly cto?: string;
+  readonly generalCounsel?: string;
+  readonly keyManagement: KeyManager[];
+  readonly organizationChart?: string;
+  readonly reportingStructure: string;
+}
+
+export interface KeyManager {
+  readonly id: string;
+  readonly name: string;
+  readonly title: string;
+  readonly citizenship: string;
+  readonly clearanceLevel?: ClearanceLevel;
+  readonly startDate: string;
+  readonly responsibilities: string[];
+}
+
+export interface Subsidiary {
+  readonly id: string;
+  readonly name: string;
+  readonly uei?: string;
+  readonly jurisdiction: string;
+  readonly ownershipPercentage: number;
+  readonly operationalControl: boolean;
+  readonly votingControl: boolean;
+  readonly purpose: string;
+  readonly active: boolean;
+}
+
+export interface ParentCompany {
+  readonly id: string;
+  readonly name: string;
+  readonly uei?: string;
+  readonly jurisdiction: string;
+  readonly ownershipPercentage: number;
+  readonly controlType: ControlType;
+  readonly ultimateParent: boolean;
+  readonly publiclyTraded: boolean;
+  readonly stockExchange?: string;
+}
+
+export enum ControlType {
+  DIRECT = 'DIRECT',
+  INDIRECT = 'INDIRECT',
+  BENEFICIAL = 'BENEFICIAL',
+  VOTING = 'VOTING',
+  OPERATIONAL = 'OPERATIONAL',
+  FINANCIAL = 'FINANCIAL'
+}
+
+// Confidence and Analysis Types
+export enum ConfidenceLevel {
+  VERY_LOW = 'VERY_LOW',
+  LOW = 'LOW',
+  MEDIUM = 'MEDIUM',
+  HIGH = 'HIGH',
+  VERY_HIGH = 'VERY_HIGH',
+  CERTAIN = 'CERTAIN'
+}
+
 // Core Entity Types
 export interface CompanyEntity {
   readonly id: string;
@@ -443,299 +694,402 @@ export enum VirusScanStatus {
   ERROR = 'ERROR'
 }
 
-// Additional supporting types for comprehensive coverage
-export interface NAICSCode {
-  readonly code: string;
-  readonly description: string;
-  readonly isPrimary: boolean;
+// Initial Access and DARPA Bridges Integration Types
+export interface InitialAccessRequest {
+  readonly requestId: string;
+  readonly source: AccessSource;
+  readonly timestamp: string;
+  readonly bridgesFormData: BridgesFormData;
+  readonly contactInference: ContactInference;
+  readonly provisioningStatus: ProvisioningStatus;
+  readonly secureLink?: SecureProvisioningLink;
+  readonly metadata: AccessRequestMetadata;
 }
 
-export interface SBACategory {
-  readonly category: SBACategoryType;
-  readonly certificationNumber?: string;
-  readonly expirationDate?: string;
-  readonly certifyingAgency: string;
+export enum AccessSource {
+  DARPA_BRIDGES = 'DARPA_BRIDGES',
+  DIRECT_REGISTRATION = 'DIRECT_REGISTRATION',
+  REFERRAL = 'REFERRAL',
+  GOVERNMENT_INVITATION = 'GOVERNMENT_INVITATION'
 }
 
-export enum SBACategoryType {
-  LARGE_BUSINESS = 'LARGE_BUSINESS',
-  SMALL_BUSINESS = 'SMALL_BUSINESS',
-  SMALL_DISADVANTAGED_BUSINESS = 'SMALL_DISADVANTAGED_BUSINESS',
-  WOMAN_OWNED_SMALL_BUSINESS = 'WOMAN_OWNED_SMALL_BUSINESS',
-  VETERAN_OWNED_SMALL_BUSINESS = 'VETERAN_OWNED_SMALL_BUSINESS',
-  HUBZONE_SMALL_BUSINESS = 'HUBZONE_SMALL_BUSINESS',
-  EIGHT_A_CERTIFIED = 'EIGHT_A_CERTIFIED'
+export interface BridgesFormData {
+  // Exact fields from DARPA Bridges contact form
+  readonly fullName: string;           // "Full name*" - mandatory
+  readonly email: string;              // "Email*" - mandatory 
+  readonly phoneNumber: string;        // "Phone number*" - mandatory
+  readonly companyOrganization: string; // "Company / Organization*" - mandatory
+  readonly titleRole: string;          // "Your Title / Role*" - mandatory
+  readonly topic: string;              // "Topic*" - mandatory dropdown
+  readonly office?: string;            // "Office (Optional)" 
+  readonly programManager?: string;    // "Program Manager (Optional)"
+  readonly message?: string;           // "Message*" - optional free text
 }
 
-export interface ClearanceRequirement {
-  readonly level: ClearanceLevel;
-  readonly facility: string;
-  readonly contractNumbers: string[];
-  readonly requiredPersonnel: number;
-  readonly currentPersonnel: number;
-  readonly expirationDate?: string;
+export interface ContactInference {
+  readonly estimatedRole: EstimatedContactRole;
+  readonly kmpLikelihood: KMPLikelihood;
+  readonly emailDomainAnalysis: EmailDomainAnalysis;
+  readonly companySizeEstimate: CompanySizeEstimate;
+  readonly handoffLikelihood: HandoffLikelihood;
+  readonly confidence: ConfidenceLevel;
 }
 
-export interface ComplianceStatus {
-  readonly overallStatus: ComplianceStatusType;
-  readonly lastReviewDate: string;
-  readonly nextReviewDate: string;
-  readonly openFindings: ComplianceFinding[];
-  readonly certifications: Certification[];
+export enum EstimatedContactRole {
+  CEO_FSO_COMBINED = 'CEO_FSO_COMBINED',     // Small company, title suggests CEO/owner
+  DEDICATED_FSO = 'DEDICATED_FSO',           // Title suggests security role
+  BUSINESS_DEVELOPMENT = 'BUSINESS_DEVELOPMENT', // BD/Sales role, likely hands off
+  TECHNICAL_LEAD = 'TECHNICAL_LEAD',         // Engineer/CTO, may handle security
+  EXECUTIVE_LEADERSHIP = 'EXECUTIVE_LEADERSHIP', // VP/C-level, uncertain handoff
+  UNKNOWN = 'UNKNOWN'
 }
 
-export enum ComplianceStatusType {
-  COMPLIANT = 'COMPLIANT',
-  NON_COMPLIANT = 'NON_COMPLIANT',
-  CONDITIONALLY_COMPLIANT = 'CONDITIONALLY_COMPLIANT',
-  UNDER_REVIEW = 'UNDER_REVIEW',
-  PENDING_CERTIFICATION = 'PENDING_CERTIFICATION'
+export enum KMPLikelihood {
+  DEFINITELY_KMP = 'DEFINITELY_KMP',         // CEO, President, FSO titles
+  LIKELY_KMP = 'LIKELY_KMP',                 // VP, Director, etc.
+  POSSIBLY_KMP = 'POSSIBLY_KMP',             // Manager, Lead, etc.
+  UNLIKELY_KMP = 'UNLIKELY_KMP'              // Coordinator, Analyst, etc.
 }
 
-export interface ComplianceFinding {
-  readonly findingId: string;
-  readonly severity: ValidationSeverity;
-  readonly description: string;
-  readonly regulatoryReference: string;
-  readonly dueDate: string;
-  readonly status: FindingStatus;
+export enum HandoffLikelihood {
+  WILL_COMPLETE_PERSONALLY = 'WILL_COMPLETE_PERSONALLY',  // Small company CEO
+  LIKELY_TO_HANDOFF = 'LIKELY_TO_HANDOFF',                // Large company BD
+  MAY_DELEGATE = 'MAY_DELEGATE',                           // Mid-size company exec
+  UNCERTAIN = 'UNCERTAIN'
 }
 
-export enum FindingStatus {
-  OPEN = 'OPEN',
-  IN_PROGRESS = 'IN_PROGRESS',
-  RESOLVED = 'RESOLVED',
-  OVERDUE = 'OVERDUE'
+export enum CompanySizeEstimate {
+  MICRO = 'MICRO',           // <10 employees
+  SMALL = 'SMALL',           // 10-100 employees  
+  MEDIUM = 'MEDIUM',         // 100-500 employees
+  LARGE = 'LARGE',           // 500+ employees
+  ENTERPRISE = 'ENTERPRISE', // 1000+ employees
+  UNKNOWN = 'UNKNOWN'
 }
 
-export interface Certification {
-  readonly certificationType: CertificationType;
-  readonly certificationNumber: string;
-  readonly issuedDate: string;
-  readonly expirationDate: string;
-  readonly issuingAuthority: string;
-  readonly status: CertificationStatus;
+export interface EmailDomainAnalysis {
+  readonly domain: string;
+  readonly isProfessionalEmail: boolean;    // Not gmail/yahoo/etc
+  readonly domainCompanyMatch: DomainMatchResult;
+  readonly confidence: ConfidenceLevel;
+  readonly extractedCompanyName?: string;
 }
 
-export enum CertificationType {
-  ISO_9001 = 'ISO_9001',
-  ISO_27001 = 'ISO_27001',
-  SOC_2 = 'SOC_2',
-  CMMC = 'CMMC',
-  FEDRAMP = 'FEDRAMP',
-  DCAA = 'DCAA',
-  CUSTOM = 'CUSTOM'
+export interface DomainMatchResult {
+  readonly matchFound: boolean;
+  readonly extractedCompanyName?: string;
+  readonly confidence: number;              // 0-1 confidence score
+  readonly methodology: DomainMatchMethodology;
+  readonly matchingElements: string[];
 }
 
-export enum CertificationStatus {
-  ACTIVE = 'ACTIVE',
+export enum DomainMatchMethodology {
+  EXACT_MATCH = 'EXACT_MATCH',
+  PARTIAL_MATCH = 'PARTIAL_MATCH', 
+  KEYWORD_EXTRACTION = 'KEYWORD_EXTRACTION',
+  FUZZY_MATCH = 'FUZZY_MATCH',
+  NO_MATCH = 'NO_MATCH'
+}
+
+export enum ProvisioningStatus {
+  PENDING = 'PENDING',
+  LINK_GENERATED = 'LINK_GENERATED',
+  LINK_ACCESSED = 'LINK_ACCESSED',
+  IDENTITY_VERIFIED = 'IDENTITY_VERIFIED',
+  ACCOUNT_CREATED = 'ACCOUNT_CREATED',
+  COMPANY_MATCHED = 'COMPANY_MATCHED',
+  PROFILE_COMPLETED = 'PROFILE_COMPLETED',
+  ACCESS_GRANTED = 'ACCESS_GRANTED',
   EXPIRED = 'EXPIRED',
-  SUSPENDED = 'SUSPENDED',
-  PENDING_RENEWAL = 'PENDING_RENEWAL'
+  FAILED = 'FAILED'
 }
 
-// Additional complex types for enterprise features
-export interface ShareClass {
-  readonly className: string;
-  readonly shareType: ShareType;
-  readonly totalShares: number;
-  readonly votingRights: VotingRights;
-  readonly dividendRights: DividendRights;
-  readonly liquidationPreference?: number;
+export interface SecureProvisioningLink {
+  readonly linkId: string;
+  readonly token: string;
+  readonly expirationTime: string;
+  readonly accessCount: number;
+  readonly maxAccesses: number;
+  readonly ipRestrictions?: string[];
+  readonly deviceFingerprint?: string;
+  readonly isTestMode: boolean;
 }
 
-export enum ShareType {
-  COMMON = 'COMMON',
-  PREFERRED = 'PREFERRED',
-  RESTRICTED = 'RESTRICTED',
-  CONVERTIBLE = 'CONVERTIBLE'
+export interface AccessRequestMetadata {
+  readonly requestedBy: string;           // DARPA official who created the link
+  readonly requestedAt: string;
+  readonly darpaProgramOffice?: string;
+  readonly darpaTaskOrder?: string;
+  readonly priority: RequestPriority;
+  readonly classification: ClassificationLevel;
+  readonly auditTrail: AuditEvent[];
 }
 
-export interface VotingRights {
-  readonly hasVotingRights: boolean;
-  readonly votesPerShare: number;
-  readonly restrictions?: string[];
-}
-
-export interface DividendRights {
-  readonly dividendRate?: number;
-  readonly isParticipating: boolean;
-  readonly isCumulative: boolean;
-}
-
-export interface VotingAgreement {
-  readonly agreementId: string;
-  readonly parties: string[];
-  readonly subject: string;
-  readonly effectiveDate: string;
-  readonly expirationDate?: string;
-  readonly restrictions: string[];
-}
-
-export interface BoardMember {
-  readonly memberId: string;
-  readonly name: string;
-  readonly position: BoardPosition;
-  readonly appointedBy: string;
-  readonly appointedDate: string;
-  readonly termExpiration?: string;
-  readonly citizenship: string[];
-  readonly clearanceLevel?: ClearanceLevel;
-  readonly isIndependent: boolean;
-}
-
-export enum BoardPosition {
-  CHAIRMAN = 'CHAIRMAN',
-  VICE_CHAIRMAN = 'VICE_CHAIRMAN',
-  DIRECTOR = 'DIRECTOR',
-  INDEPENDENT_DIRECTOR = 'INDEPENDENT_DIRECTOR',
-  OBSERVER = 'OBSERVER'
-}
-
-export interface ManagementStructure {
-  readonly ceo: string;
-  readonly cfo?: string;
-  readonly coo?: string;
-  readonly cto?: string;
-  readonly generalCounsel?: string;
-  readonly facilitySecurityOfficer: string;
-  readonly seniorManagementOfficial: string;
-  readonly otherOfficers: Officer[];
-}
-
-export interface Officer {
-  readonly officerId: string;
-  readonly name: string;
-  readonly title: string;
-  readonly appointedDate: string;
-  readonly reportingStructure: string[];
-  readonly clearanceLevel?: ClearanceLevel;
-  readonly citizenship: string[];
-  readonly isKeyPersonnel: boolean;
-}
-
-export interface Subsidiary {
-  readonly subsidiaryId: string;
-  readonly name: string;
-  readonly ownershipPercentage: number;
-  readonly jurisdiction: string;
-  readonly businessPurpose: string;
-  readonly hasGovernmentContracts: boolean;
-  readonly clearanceRequired: boolean;
-}
-
-export interface ParentCompany {
-  readonly parentId: string;
-  readonly name: string;
-  readonly ownershipPercentage: number;
-  readonly jurisdiction: string;
-  readonly isPublic: boolean;
-  readonly isForeign: boolean;
-  readonly stockExchange?: string;
-  readonly tickerSymbol?: string;
-}
-
-export interface MitigationMeasure {
-  readonly measureId: string;
-  readonly measureType: MitigationType;
-  readonly description: string;
-  readonly implementationDate?: string;
-  readonly status: MitigationStatus;
-  readonly effectiveness: EffectivenessRating;
-  readonly reviewDate: string;
-  readonly responsibleParty: string;
-}
-
-export enum MitigationType {
-  BOARD_RESOLUTION = 'BOARD_RESOLUTION',
-  PROXY_AGREEMENT = 'PROXY_AGREEMENT',
-  SPECIAL_SECURITY_AGREEMENT = 'SPECIAL_SECURITY_AGREEMENT',
-  VOTING_TRUST = 'VOTING_TRUST',
-  TECHNOLOGY_CONTROL_PLAN = 'TECHNOLOGY_CONTROL_PLAN',
-  NETWORK_SECURITY_AGREEMENT = 'NETWORK_SECURITY_AGREEMENT',
-  OTHER = 'OTHER'
-}
-
-export enum MitigationStatus {
-  PROPOSED = 'PROPOSED',
-  APPROVED = 'APPROVED',
-  IMPLEMENTED = 'IMPLEMENTED',
-  MONITORING = 'MONITORING',
-  EXPIRED = 'EXPIRED',
-  SUPERSEDED = 'SUPERSEDED'
-}
-
-export enum EffectivenessRating {
-  NOT_ASSESSED = 'NOT_ASSESSED',
-  INEFFECTIVE = 'INEFFECTIVE',
-  PARTIALLY_EFFECTIVE = 'PARTIALLY_EFFECTIVE',
-  EFFECTIVE = 'EFFECTIVE',
-  HIGHLY_EFFECTIVE = 'HIGHLY_EFFECTIVE'
-}
-
-export interface ComplianceGap {
-  readonly gapId: string;
-  readonly requirement: string;
-  readonly currentState: string;
-  readonly requiredState: string;
-  readonly severity: ValidationSeverity;
-  readonly remediation: string;
-  readonly timeline: string;
-  readonly cost?: number;
-  readonly riskOfNonCompliance: string;
-}
-
-export interface Recommendation {
-  readonly recommendationId: string;
-  readonly category: RecommendationCategory;
-  readonly priority: RecommendationPriority;
-  readonly title: string;
-  readonly description: string;
-  readonly rationale: string;
-  readonly implementation: string;
-  readonly timeline: string;
-  readonly cost?: number;
-  readonly benefit: string;
-  readonly regulatoryBasis?: string;
-}
-
-export enum RecommendationCategory {
-  GOVERNANCE = 'GOVERNANCE',
-  SECURITY = 'SECURITY',
-  COMPLIANCE = 'COMPLIANCE',
-  OPERATIONAL = 'OPERATIONAL',
-  FINANCIAL = 'FINANCIAL',
-  LEGAL = 'LEGAL'
-}
-
-export enum RecommendationPriority {
-  LOW = 'LOW',
-  MEDIUM = 'MEDIUM',
-  HIGH = 'HIGH',
+export enum RequestPriority {
+  ROUTINE = 'ROUTINE',
+  ELEVATED = 'ELEVATED', 
+  HIGH_PRIORITY = 'HIGH_PRIORITY',
   CRITICAL = 'CRITICAL'
 }
 
-export interface AssessmentMetadata {
-  readonly methodology: string;
-  readonly toolsUsed: string[];
-  readonly dataSourcesConsulted: string[];
-  readonly assumptions: string[];
-  readonly limitations: string[];
-  readonly confidenceLevel: ConfidenceLevel;
-  readonly qualityAssurance: QualityAssuranceInfo;
+// Test Entity Management Types
+export interface TestEntityBaseline {
+  readonly testEntityId: string;
+  readonly assignedContact: TestContactInfo;
+  readonly entityCharacteristics: TestEntityCharacteristics;
+  readonly testScenario: TestScenario;
 }
 
-export enum ConfidenceLevel {
-  LOW = 'LOW',
-  MEDIUM = 'MEDIUM',
-  HIGH = 'HIGH',
-  VERY_HIGH = 'VERY_HIGH'
+export interface TestContactInfo {
+  readonly name: string;
+  readonly email: string;                   // All use coleman@pearsonsecurityservices.com baseline
+  readonly phone: string;
+  readonly title: string;
+  readonly estimatedRole: EstimatedContactRole;
+  readonly kmpLikelihood: KMPLikelihood;
 }
 
-export interface QualityAssuranceInfo {
-  readonly reviewedBy: string;
-  readonly reviewDate: string;
-  readonly reviewComments?: string;
-  readonly approvedBy: string;
-  readonly approvalDate: string;
+export interface TestEntityCharacteristics {
+  readonly complexityLevel: ComplexityLevel;
+  readonly businessSize: SBACategoryType;
+  readonly fociComplexity: FOCIComplexityLevel;
+  readonly kmpCount: number;
+  readonly ownershipTiers: number;
+  readonly foreignOwnershipPercentage: number;
+  readonly description: string;
+  readonly expectedChallenges: string[];
+}
+
+export enum ComplexityLevel {
+  VERY_LOW = 'VERY_LOW',       // Darkstar - Single member LLC
+  LOW = 'LOW',                 // Simple structures
+  MODERATE = 'MODERATE',       // Valens - Multiple owners 
+  HIGH = 'HIGH',               // PE-backed, complex structures
+  VERY_HIGH = 'VERY_HIGH'      // Public companies, international
+}
+
+export enum FOCIComplexityLevel {
+  NO_FOCI = 'NO_FOCI',                    // Clear domestic ownership
+  POTENTIAL_FOCI = 'POTENTIAL_FOCI',      // Foreign contracts/revenue
+  CLEAR_FOCI = 'CLEAR_FOCI',              // Foreign ownership present
+  COMPLEX_FOCI = 'COMPLEX_FOCI'           // Multiple FOCI factors
+}
+
+export interface TestScenario {
+  readonly scenarioId: string;
+  readonly scenarioName: string;
+  readonly objectives: string[];
+  readonly expectedOutcomes: string[];
+  readonly testCriteria: TestCriteria[];
+}
+
+export interface TestCriteria {
+  readonly criteriaId: string;
+  readonly description: string;
+  readonly expectedResult: string;
+  readonly validationMethod: ValidationMethod;
+}
+
+export enum ValidationMethod {
+  AUTOMATED_CHECK = 'AUTOMATED_CHECK',
+  MANUAL_REVIEW = 'MANUAL_REVIEW',
+  USER_FEEDBACK = 'USER_FEEDBACK',
+  DATA_VALIDATION = 'DATA_VALIDATION'
+}
+
+// Company Matching and SAM Integration Types
+export interface CompanyMatchingResult {
+  readonly matchId: string;
+  readonly uei?: string;
+  readonly legalName: string;
+  readonly dbaName?: string;
+  readonly matchType: CompanyMatchType;
+  readonly confidence: number;              // 0-1 confidence score
+  readonly domainMatch: DomainMatchResult;
+  readonly samData?: SAMEntityData;
+  readonly validationStatus: ValidationStatus;
+}
+
+export enum CompanyMatchType {
+  EXACT_UEI = 'EXACT_UEI',
+  EXACT_NAME = 'EXACT_NAME',
+  FUZZY_NAME = 'FUZZY_NAME',
+  DOMAIN_MATCH = 'DOMAIN_MATCH',
+  PARTIAL_MATCH = 'PARTIAL_MATCH',
+  NO_MATCH = 'NO_MATCH'
+}
+
+export interface SAMEntityData {
+  readonly uei: string;
+  readonly legalBusinessName: string;
+  readonly dbaName?: string;
+  readonly cageCode?: string;
+  readonly entityStructure: string;
+  readonly stateOfIncorporation?: string;
+  readonly countryOfIncorporation?: string;
+  readonly physicalAddress: SAMAddress;
+  readonly mailingAddress?: SAMAddress;
+  readonly registrationStatus: string;
+  readonly registrationDate?: string;
+  readonly expirationDate?: string;
+  readonly lastUpdated: string;
+  readonly businessTypes: string[];
+  readonly naicsCodes: SAMNAICSCode[];
+}
+
+export interface SAMAddress {
+  readonly streetLine1: string;
+  readonly streetLine2?: string;
+  readonly city: string;
+  readonly stateOrProvince: string;
+  readonly zipCode: string;
+  readonly country: string;
+}
+
+export interface SAMNAICSCode {
+  readonly naicsCode: string;
+  readonly naicsDescription: string;
+  readonly isPrimary: boolean;
+  readonly smallBusinessIndicator?: boolean;
+}
+
+// Initial Application State Types  
+export interface InitialApplicationData {
+  readonly sessionId: string;
+  readonly source: AccessSource;
+  readonly bridgesContext?: BridgesFormData;
+  readonly testMode: boolean;
+  readonly testEntity?: TestEntityBaseline;
+  readonly prePopulatedEntity: Partial<CompanyEntity>;
+  readonly contactInference: ContactInference;
+  readonly companyMatches: CompanyMatchingResult[];
+  readonly selectedMatch?: CompanyMatchingResult;
+  readonly createdAt: string;
+}
+
+export interface OnboardingProgress {
+  readonly currentStep: OnboardingStep;
+  readonly completedSteps: OnboardingStep[];
+  readonly totalSteps: number;
+  readonly progressPercentage: number;
+  readonly canProceed: boolean;
+  readonly blockers: string[];
+}
+
+export enum OnboardingStep {
+  SECURE_ACCESS_VALIDATION = 'SECURE_ACCESS_VALIDATION',
+  IDENTITY_VERIFICATION = 'IDENTITY_VERIFICATION',
+  ACCOUNT_CREATION = 'ACCOUNT_CREATION',
+  COMPANY_MATCHING = 'COMPANY_MATCHING',
+  COMPANY_CONFIRMATION = 'COMPANY_CONFIRMATION',
+  PROFILE_COMPLETION = 'PROFILE_COMPLETION',
+  ACCESS_GRANTED = 'ACCESS_GRANTED'
+}
+
+// User Account Creation Types
+export interface UserRegistrationDetails {
+  readonly personalInfo: PersonalInformation;
+  readonly credentials: AccountCredentials;
+  readonly securityInfo: SecurityInformation;
+  readonly preferences: UserPreferences;
+  readonly terms: TermsAcceptance;
+}
+
+export interface PersonalInformation {
+  readonly firstName: string;
+  readonly lastName: string;
+  readonly middleName?: string;
+  readonly title: string;
+  readonly email: string;
+  readonly phoneNumber: string;
+  readonly mobileNumber?: string;
+  readonly preferredName?: string;
+}
+
+export interface AccountCredentials {
+  readonly username?: string;              // Optional if using email
+  readonly passwordHash?: string;          // Only if not using external auth
+  readonly authProvider: AuthProvider;
+  readonly externalId?: string;            // For login.gov, etc.
+  readonly mfaEnabled: boolean;
+  readonly mfaMethod?: MFAMethod;
+}
+
+export enum AuthProvider {
+  LOCAL = 'LOCAL',                         // Username/password
+  LOGIN_GOV = 'LOGIN_GOV',                // Login.gov integration
+  CAC_PIV = 'CAC_PIV',                    // Common Access Card
+  SAML_SSO = 'SAML_SSO',                  // SAML Single Sign-On
+  OAUTH2 = 'OAUTH2'                       // OAuth2 provider
+}
+
+export enum MFAMethod {
+  SMS = 'SMS',
+  EMAIL = 'EMAIL',
+  AUTHENTICATOR_APP = 'AUTHENTICATOR_APP',
+  HARDWARE_TOKEN = 'HARDWARE_TOKEN',
+  CAC_PIV = 'CAC_PIV'
+}
+
+export interface SecurityInformation {
+  readonly clearanceLevel?: ClearanceLevel;
+  readonly clearanceStatus?: ClearanceStatus;
+  readonly citizenship: string[];
+  readonly securityOfficer: boolean;
+  readonly keyManagementPersonnel: boolean;
+  readonly previousClearance?: ClearanceHistory;
+}
+
+export enum ClearanceStatus {
+  NONE = 'NONE',
+  PENDING = 'PENDING',
+  ACTIVE = 'ACTIVE',
+  SUSPENDED = 'SUSPENDED',
+  REVOKED = 'REVOKED',
+  EXPIRED = 'EXPIRED'
+}
+
+export interface ClearanceHistory {
+  readonly previousLevel: ClearanceLevel;
+  readonly issuingAgency: string;
+  readonly startDate: string;
+  readonly endDate?: string;
+  readonly reason?: string;
+}
+
+export interface UserPreferences {
+  readonly language: string;
+  readonly timezone: string;
+  readonly notifications: NotificationPreferences;
+  readonly accessibility: AccessibilitySettings;
+}
+
+export interface NotificationPreferences {
+  readonly email: boolean;
+  readonly sms: boolean;
+  readonly inApp: boolean;
+  readonly securityAlerts: boolean;
+  readonly complianceReminders: boolean;
+}
+
+export interface AccessibilitySettings {
+  readonly screenReader: boolean;
+  readonly highContrast: boolean;
+  readonly largeFonts: boolean;
+  readonly keyboardNavigation: boolean;
+}
+
+export interface TermsAcceptance {
+  readonly privacyPolicy: TermAcceptance;
+  readonly termsOfService: TermAcceptance;
+  readonly governmentAccess: TermAcceptance;
+  readonly dataRetention: TermAcceptance;
+}
+
+export interface TermAcceptance {
+  readonly accepted: boolean;
+  readonly version: string;
+  readonly acceptedAt: string;
+  readonly ipAddress?: string;
+  readonly userAgent?: string;
 }

@@ -544,6 +544,113 @@ class HealthCheckResponse(BaseModel):
     services: Dict[str, str]
 
 
+# Initial Access / Onboarding Schemas
+class InitialAccessLinkRequest(BaseModel):
+    """Request to validate an initial access link."""
+
+    token: str = Field(..., min_length=32, max_length=512)
+    source: Optional[str] = Field(
+        None, max_length=100
+    )  # "DARPA_BRIDGES", "MANUAL", etc.
+
+
+class InitialAccessLinkResponse(BaseModel):
+    """Response for initial access link validation."""
+
+    valid: bool
+    expires_at: Optional[datetime] = None
+    user_info: Optional[Dict[str, Any]] = None
+    company_info: Optional[Dict[str, Any]] = None
+    source: Optional[str] = None
+
+
+class ContactInferenceRequest(BaseModel):
+    """Request to infer contact information from partial data."""
+
+    email: Optional[EmailStr] = None
+    first_name: Optional[str] = Field(None, max_length=100)
+    last_name: Optional[str] = Field(None, max_length=100)
+    company_name: Optional[str] = Field(None, max_length=200)
+    phone: Optional[str] = Field(None, max_length=20)
+    additional_data: Optional[Dict[str, Any]] = {}
+
+
+class ContactInferenceResponse(BaseModel):
+    """Response with inferred contact information."""
+
+    confidence_score: float = Field(..., ge=0.0, le=1.0)
+    inferred_data: Dict[str, Any]
+    missing_fields: List[str]
+    suggestions: List[Dict[str, Any]]
+
+
+class CompanyMatchRequest(BaseModel):
+    """Request to match a company against existing records."""
+
+    company_name: str = Field(..., max_length=200)
+    ein: Optional[str] = Field(None, max_length=20)
+    duns: Optional[str] = Field(None, max_length=20)
+    cage_code: Optional[str] = Field(None, max_length=20)
+    address: Optional[str] = Field(None, max_length=500)
+    fuzzy_match: bool = Field(default=True)
+    confidence_threshold: float = Field(default=0.8, ge=0.0, le=1.0)
+
+
+class CompanyMatchResponse(BaseModel):
+    """Response with company matching results."""
+
+    matches: List[Dict[str, Any]]
+    best_match: Optional[Dict[str, Any]] = None
+    confidence_score: float = Field(..., ge=0.0, le=1.0)
+    is_new_company: bool
+    suggested_cage_codes: List[str] = []
+
+
+class TestEntityRequest(BaseModel):
+    """Request to create or retrieve test entity baseline."""
+
+    entity_type: Literal["COMPANY", "INDIVIDUAL", "FOREIGN_ENTITY"]
+    scenario: str = Field(
+        ..., max_length=100
+    )  # "BASIC_CONTRACTOR", "FOCI_COMPLEX", etc.
+    include_sample_data: bool = Field(default=True)
+
+
+class TestEntityResponse(BaseModel):
+    """Response with test entity baseline data."""
+
+    entity_id: UUID
+    entity_type: str
+    scenario: str
+    baseline_data: Dict[str, Any]
+    sample_documents: List[Dict[str, Any]] = []
+    next_steps: List[str] = []
+
+
+class SecureOnboardingRequest(BaseModel):
+    """Comprehensive request for secure user onboarding."""
+
+    access_token: str = Field(..., min_length=32, max_length=512)
+    contact_info: ContactInferenceRequest
+    company_info: Optional[CompanyMatchRequest] = None
+    create_test_entity: Optional[TestEntityRequest] = None
+    agreed_to_terms: bool = Field(..., description="User must agree to terms")
+    source_metadata: Optional[Dict[str, Any]] = {}
+
+
+class SecureOnboardingResponse(BaseModel):
+    """Response for secure onboarding completion."""
+
+    success: bool
+    user_id: Optional[UUID] = None
+    company_id: Optional[UUID] = None
+    test_entity_id: Optional[UUID] = None
+    session_token: Optional[str] = None
+    next_steps: List[str] = []
+    warnings: List[str] = []
+    errors: List[str] = []
+
+
 # Forward references resolution
 BusinessEntityCreate.model_rebuild()
 BusinessEntity.model_rebuild()
@@ -621,4 +728,15 @@ __all__ = [
     "MessageResponse",
     "PaginatedResponse",
     "HealthCheckResponse",
+    # Initial Access / Onboarding
+    "InitialAccessLinkRequest",
+    "InitialAccessLinkResponse",
+    "ContactInferenceRequest",
+    "ContactInferenceResponse",
+    "CompanyMatchRequest",
+    "CompanyMatchResponse",
+    "TestEntityRequest",
+    "TestEntityResponse",
+    "SecureOnboardingRequest",
+    "SecureOnboardingResponse",
 ]

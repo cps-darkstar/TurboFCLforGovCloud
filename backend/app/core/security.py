@@ -1,3 +1,8 @@
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+
 """
 Enterprise Security & Encryption Service for TurboFCL
 Handles PII encryption, secure key management, and FIPS 140-2 compliance
@@ -11,8 +16,10 @@ import os
 import secrets
 from datetime import datetime, timedelta
 from typing import Any, Dict, Optional, Union
+from uuid import uuid4
 
 from app.core.config import get_settings
+from app.schemas.enterprise_schemas import User  # Import the User schema
 from cryptography.fernet import Fernet
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes, serialization
@@ -463,3 +470,27 @@ def secure_hash(data: str) -> str:
 def generate_audit_token() -> str:
     """Generate secure token for audit trail tracking"""
     return encryption_service.generate_secure_token()
+
+
+async def get_current_active_user() -> User:
+    """
+    Placeholder for a dependency that would get the current authenticated user.
+    In a real application, this would involve decoding a JWT token,
+    verifying the session, and fetching the user from the database.
+
+    Returns a mock User model instance.
+    """
+    # This is a mock user. In a real app, you'd get this from a token.
+    return User(
+        id=uuid4(),
+        username="testuser",
+        email="user@example.gov",
+        first_name="Test",
+        last_name="User",
+        is_active=True,
+        roles=[],  # In a real app, this would be populated with Role schemas
+        created_at=datetime.now(),
+        updated_at=datetime.now(),
+        login_count=1,
+        last_login=datetime.now(),
+    )
