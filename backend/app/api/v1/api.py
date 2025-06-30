@@ -11,6 +11,8 @@ from fastapi import APIRouter
 from .endpoints.enterprise import router as enterprise_router
 from .endpoints.fso_auth import router as fso_auth_router
 from .endpoints.simple_auth import router as simple_auth_router
+from .endpoints.requirements import router as requirements_router
+from .endpoints.govcloud import router as govcloud_router
 
 # Create main API router
 api_router = APIRouter(prefix="/api/v1")
@@ -29,6 +31,8 @@ api_router.include_router(
     simple_auth_router, prefix="/auth", tags=["Simple Authentication"]
 )
 api_router.include_router(fso_auth_router, prefix="/fso", tags=["FSO Authentication"])
+api_router.include_router(requirements_router, prefix="/requirements", tags=["Requirements"])
+api_router.include_router(govcloud_router, prefix="/govcloud", tags=["GovCloud"])
 
 
 # Export the main router

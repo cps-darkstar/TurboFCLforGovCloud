@@ -4,7 +4,7 @@ Provides comprehensive FCL, FOCI, and compliance management endpoints.
 """
 
 from datetime import datetime
-from typing import List, Optional, Dict, Any
+from typing import Any, Dict, List, Optional
 from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, Query, status

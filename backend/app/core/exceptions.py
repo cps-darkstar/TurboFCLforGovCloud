@@ -160,3 +160,23 @@ class ConfigurationError(TurboFCLException):
         self.config_key = config_key
         self.error_code = "CONFIGURATION_ERROR"
         super().__init__(message)
+
+
+class AuthenticationError(TurboFCLException):
+    """Raised when authentication (e.g., login, token verification) fails."""
+
+    def __init__(
+        self,
+        message: str = "Invalid credentials",
+        details: Optional[Dict[str, Any]] = None,
+    ):
+        self.error_code = "AUTHENTICATION_ERROR"
+        super().__init__(message, details)
+
+
+class NotFoundError(TurboFCLException):
+    """Generic *not-found* error for resources not covered by EntityNotFoundError."""
+
+    def __init__(self, message: str, details: Optional[Dict[str, Any]] = None):
+        self.error_code = "NOT_FOUND"
+        super().__init__(message, details)

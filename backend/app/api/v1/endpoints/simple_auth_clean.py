@@ -4,7 +4,7 @@ Simple Authentication API Endpoints for TurboFCL
 Basic authentication endpoints for simplified user management.
 """
 
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, status

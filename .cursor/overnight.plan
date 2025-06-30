@@ -1,0 +1,27 @@
+[
+  { "tool": "run_terminal_cmd", "command": "echo \"🌙  Night-run started $(date)\" | cat" },
+  { "tool": "run_terminal_cmd", "command": "pip install -r backend/requirements.txt --quiet" },
+  { "tool": "run_terminal_cmd", "command": "npm ci --prefix frontend --silent" },
+
+  { "tool": "run_terminal_cmd", "command": "black backend frontend --quiet" },
+  { "tool": "run_terminal_cmd", "command": "isort backend frontend --profile black --quiet" },
+
+  { "tool": "run_terminal_cmd", "command": "pylint backend/app --fail-under=8.5 --exit-zero | tee pylint.log | cat" },
+  { "tool": "run_terminal_cmd", "command": "pytest -q backend || true" },
+  { "tool": "run_terminal_cmd", "command": "pytest --cov=backend/app --cov-report=html:coverage_html -q backend || true" },
+
+  { "tool": "run_terminal_cmd", "command": "npm run lint:fix --prefix frontend || true" },
+  { "tool": "run_terminal_cmd", "command": "npm run build --prefix frontend" },
+  { "tool": "run_terminal_cmd", "command": "npx --yes lighthouse ./frontend/build/index.html --quiet --chrome-flags=--headless --output=json --output-path=lh.json" },
+
+  { "tool": "run_terminal_cmd", "command": "npx tsc --noEmit --project frontend/tsconfig.json || true" },
+
+  { "tool": "run_terminal_cmd", "command": "python - <<'PY'\nimport requests, json, time, subprocess, os, sys, signal, multiprocessing as mp\n\ndef serve():\n    import uvicorn\n    uvicorn.run('backend.app.main:app', host='127.0.0.1', port=8888, log_level='error')\n\nproc = mp.Process(target=serve)\nproc.start()\ntime.sleep(5)\ntry:\n    for et in ['llc','corporation']:\n        r = requests.get(f'http://127.0.0.1:8888/api/v1/requirements/{et}', timeout=5)\n        assert r.status_code==200\n    print('✔ requirements endpoint OK')\nfinally:\n    proc.terminate(); proc.join()\nPY" },
+
+  { "tool": "run_terminal_cmd", "command": "du -sh frontend/build | cat" },
+  { "tool": "run_terminal_cmd", "command": "python - <<'PY'\nimport json, pathlib, sys\nmanifest = json.load(open('frontend/build/asset-manifest.json'))\nfor f in manifest['entrypoints']:\n    p = pathlib.Path('frontend/build', f)\n    if p.exists():\n        print(f'{f}: {p.stat().st_size/1024:.1f} KB')\nPY" },
+
+  { "tool": "run_terminal_cmd", "command": "python - <<'PY'\nfrom fastapi.openapi.utils import get_openapi\nfrom backend.app.main import app\nimport json, pathlib\nschema = get_openapi(title=app.title, version='nightly', routes=app.routes)\npath = pathlib.Path('docs/api_schema.json'); path.write_text(json.dumps(schema, indent=2))\nprint('OpenAPI spec written to', path)\nPY" },
+
+  { "tool": "run_terminal_cmd", "command": "echo \"🌙  Night-run finished $(date)\" | cat" }
+] 

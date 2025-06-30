@@ -5,7 +5,7 @@ Simplified endpoints for FSO-centric authentication and account management.
 Designed for testing phase with 5-10 testers at ISI and a few at DARPA.
 """
 
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, status

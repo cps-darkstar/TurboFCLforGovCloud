@@ -5,7 +5,7 @@ Simplified endpoints for FSO-centric authentication and account management.
 Designed for testing phase with 5-10 testers at ISI and a few at DARPA.
 """
 
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, status
@@ -25,7 +25,7 @@ async def request_account_access(request_data: Dict[str, Any]):
             "message": "Account request submitted successfully",
             "request_id": "req-123",
             "status": "pending_review",
-            "estimated_approval_time": "1-2 business days"
+            "estimated_approval_time": "1-2 business days",
         }
     except Exception as e:
         raise HTTPException(
@@ -47,10 +47,12 @@ async def register_fso(registration_data: Dict[str, Any]):
             "fso_id": "fso-123",
             "company_id": "comp-123",
             "access_token": "token-abc123",
-            "token_type": "bearer"
+            "token_type": "bearer",
         }
     except Exception as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
+        ) from e
 
 
 @router.post("/login", response_model=Dict[str, Any])
@@ -66,7 +68,7 @@ async def login_fso(login_data: Dict[str, Any]):
             "token_type": "bearer",
             "expires_in": 3600,
             "fso_id": "fso-123",
-            "company_id": "comp-123"
+            "company_id": "comp-123",
         }
     except Exception as e:
         raise HTTPException(
@@ -88,11 +90,13 @@ async def get_company_users(company_id: UUID):
                 "name": "John Doe",
                 "email": "john.doe@example.com",
                 "role": "employee",
-                "clearance_level": "secret"
+                "clearance_level": "secret",
             }
         ]
     except Exception as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
+        ) from e
 
 
 @router.post("/companies/{company_id}/users", response_model=Dict[str, Any])
@@ -106,10 +110,12 @@ async def create_company_user(company_id: UUID, user_data: Dict[str, Any]):
         return {
             "message": "User created successfully",
             "user_id": "user-124",
-            "company_id": str(company_id)
+            "company_id": str(company_id),
         }
     except Exception as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
+        ) from e
 
 
 @router.put("/users/{user_id}/permissions", response_model=Dict[str, Any])
@@ -122,10 +128,12 @@ async def update_user_permissions(user_id: UUID, permissions_data: Dict[str, Any
         # Mock response for now
         return {
             "message": "User permissions updated successfully",
-            "user_id": str(user_id)
+            "user_id": str(user_id),
         }
     except Exception as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
+        ) from e
 
 
 @router.get("/companies/{company_id}/fcl-status", response_model=Dict[str, Any])
@@ -141,10 +149,12 @@ async def get_fcl_status(company_id: UUID):
             "current_clearance": "confidential",
             "application_status": "in_progress",
             "last_updated": "2025-01-27T10:00:00Z",
-            "next_review_date": "2025-02-15"
+            "next_review_date": "2025-02-15",
         }
     except Exception as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
+        ) from e
 
 
 @router.get("/system/status", response_model=Dict[str, Any])
@@ -160,7 +170,7 @@ async def get_system_status():
             "total_companies": 5,
             "total_fsos": 8,
             "total_applications": 12,
-            "last_updated": "2025-01-27T10:00:00Z"
+            "last_updated": "2025-01-27T10:00:00Z",
         }
     except Exception as e:
         raise HTTPException(
