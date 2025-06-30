@@ -18,8 +18,8 @@ class Settings(BaseSettings):
     """
 
     # Application
-    APP_NAME: str = "TurboFCL"
-    APP_VERSION: str = "1.0.0"
+    APP_NAME: str = "TurboFCL Enterprise"
+    APP_VERSION: str = "2.0.0-beta.1"
     DEBUG: bool = False
     ENVIRONMENT: str = "production"
 

@@ -1,6 +1,6 @@
 {
-  "name": "turbofcl-frontend",
-  "version": "1.0.0",
+  "name": "turbofcl-enterprise-frontend",
+  "version": "2.0.0-beta.1",
   "private": true,
   "dependencies": {
     "@headlessui/react": "^1.7.17",
